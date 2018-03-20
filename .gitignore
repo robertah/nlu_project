@@ -99,3 +99,9 @@ ENV/
 
 # mypy
 .mypy_cache/
+.idea/inspectionProfiles/
+.idea/misc.xml
+.idea/modules.xml
+.idea/nlu_project.iml
+.idea/workspace.xml
+.idea/vcs.xml

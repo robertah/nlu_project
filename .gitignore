@@ -101,6 +101,3 @@ ENV/
 .mypy_cache/
 .idea/
 data/*
-pos-tagger/*
-pos-tagger-official-solution/*
-tests.py

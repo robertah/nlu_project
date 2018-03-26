@@ -6,7 +6,7 @@ def main():
     with open('config.yaml', 'r') as stream:
         config = yaml.load(stream)
 
-    '''    Testing if it words
+    '''    Testing if it works
     print(config['token']['bos'])
 
     for file in os.listdir(config['path']['data']):

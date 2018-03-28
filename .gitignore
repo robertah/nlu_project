@@ -101,9 +101,6 @@ ENV/
 .mypy_cache/
 .idea/
 
-<<<<<<< HEAD
 pos-tagger/*
-=======
-pos-tagger/*
+pos-tagger-official-solution/*
 data/*
->>>>>>> Merge branch 'master' of https://github.com/robertah/nlu_project

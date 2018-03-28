@@ -102,4 +102,5 @@ ENV/
 .idea/
 
 pos-tagger/*
+pos-tagger-official-solution/*
 data/*

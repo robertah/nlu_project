@@ -10,5 +10,5 @@ token:
 sentence_len: 30
 vocabulary_size: 20000
 batch_size: 64
-
+batches_per_epoch: 100
 embeddings_size: 100

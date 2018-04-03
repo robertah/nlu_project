@@ -15,9 +15,9 @@ class lstm(object):
         self.b = tf.Variable(tf.zeros((embeddings_size,)), name="b")
         self.W = tf.Variable(tf.random_uniform((batch_size, embeddings_size), -1, 1), name="W")
 
-        self.C_t =
+        self.C_in =
 
-        self.h_t =
+        self.h_in =
 
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))

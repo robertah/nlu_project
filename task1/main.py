@@ -51,7 +51,7 @@ def main():
         dataset = [x.strip("\n") for x in dataset]
     
 
-    batches=train_utils.create_batches(nb_batches_per_epoch, batch_size, model_w2v, dataset, dataset_size)
+    batches=train_utils.create_batches(1, batch_size, model_w2v, dataset, dataset_size)
     print("Printing batches dimensions")
     print(batches.shape)
     

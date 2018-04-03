@@ -5,7 +5,7 @@ from gensim.models import word2vec
 
 class data_utils:
 
-    def __init__(self,emb_dim, nb_conc_words, nb_words_dictionary,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder):
+    def __init__(self,model_to_load,emb_dim, nb_conc_words, nb_words_dictionary,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder):
 
         self.emdedding_dimensions=emb_dim
         self.max_nb_conc_words=nb_conc_words
@@ -14,11 +14,15 @@ class data_utils:
         self.padding_placeholder=pad_placeholder
         self.unknown=unk_placeholder
         self.max_nb_words_dictionary=nb_words_dictionary
+        self.model_to_load=model_to_load
 
     def word_2_vec(self):
 
-        self.model_w2v = word2vec.Word2Vec(self.wrapped_sentences, size=self.emdedding_dimensions)
-
+        if not self.model_to_load:
+            self.model_w2v = word2vec.Word2Vec(self.wrapped_sentences, size=self.emdedding_dimensions)
+            print("w2v model created according to the vocabulary")
+        else:
+            self.model_w2v = None
 
     def check_for_unknown_words(self, sentence, nb_words):
 

@@ -3,6 +3,8 @@ import os
 import data_utilities as data_utilities
 import training_utils as train_utils
 import numpy as np
+from gensim.models import word2vec
+
 
 def main():
     # load variables from config.yml
@@ -41,19 +43,21 @@ def main():
     """Create model and preprocess data, 
        or load the saved model and the data preprocessed in a previous run"""
     if not model_to_load:
-        utils = data_utilities.data_utils(emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
+        utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
         model_w2v, dataset = utils.load_data(data_file_path)
-        #model_w2v.save(data_folder_path+"/"+w2v_model_filename)
+        model_w2v.save(data_folder_path+"/"+w2v_model_filename)
         #np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
     else:
-        model = Word2Vec.load(data_folder_path+"/"+w2v_model_filename)
-        dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
-        dataset = [x.strip("\n") for x in dataset]
+        utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
+        model_w2v, dataset = utils.load_data(data_file_path)
+        model_w2v = word2vec.Word2Vec.load(data_folder_path+"/"+w2v_model_filename)
+        #dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
+        #dataset = [x.strip("\n") for x in dataset]
     
-
-    batches=train_utils.create_batches(1, batch_size, model_w2v, dataset, dataset_size)
-    print("Printing batches dimensions")
-    print(batches.shape)
+    #dataset_size=len(dataset)
+    #batches=train_utils.create_batches(1, batch_size, model_w2v, dataset, dataset_size)
+    #print("Printing batches dimensions")
+    #print(batches.shape)
     
 
 

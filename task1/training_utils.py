@@ -38,11 +38,10 @@ def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
     batches=[]
 
     print("Creating batches, totally ",nb_batches)
-    print("Dataset shape is ",dataset.shape)
     
     """Creating a single batch each time could be expensive, 
        whereas ceating multiple ones in one go could be less computationally expensive"""
-    
+
     if nb_batches == 1:
         batches = (np.transpose(create_batch(batch_size, model_w2v, dataset, dataset_size)))
     else:

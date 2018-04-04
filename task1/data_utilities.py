@@ -3,9 +3,10 @@ from collections import Counter
 import numpy as np
 from gensim.models import word2vec
 
+
 class data_utils:
 
-    def __init__(self,model_to_load,emb_dim, nb_conc_words, nb_words_dictionary,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder):
+    def __init__(self, model_to_load,emb_dim, nb_conc_words, nb_words_dictionary,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder):
 
         self.emdedding_dimensions=emb_dim
         self.max_nb_conc_words=nb_conc_words

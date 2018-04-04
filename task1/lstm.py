@@ -13,16 +13,16 @@ class Parameters(object):
 
     def __init__(self, hl_size, z_size):
 
+        # Weights
         self.W_i = tf.Variable(tf.random_uniform((hl_size, z_size), -1, 1), name="W_i")
-        self.b_i = tf.Variable(tf.zeros((hl_size,)), name="b_i")
-
         self.W_f = tf.Variable(tf.random_uniform((hl_size, z_size), -1, 1), name="W_f")
-        self.b_f = tf.Variable(tf.zeros((hl_size,)), name="b_f")
-
         self.W_c = tf.Variable(tf.random_uniform((hl_size, z_size), -1, 1), name="W_c")
-        self.b_c = tf.Variable(tf.zeros((hl_size,)), name="b_c")
-
         self.W_o = tf.Variable(tf.random_uniform((hl_size, z_size), -1, 1), name="W_o")
+
+        # Biases
+        self.b_i = tf.Variable(tf.zeros((hl_size,)), name="b_i")
+        self.b_f = tf.Variable(tf.zeros((hl_size,)), name="b_f")
+        self.b_c = tf.Variable(tf.zeros((hl_size,)), name="b_c")
         self.b_o = tf.Variable(tf.zeros((hl_size,)), name="b_o")
 
 
@@ -35,12 +35,16 @@ def tanh(x):
 
 
 class Inputs():
-    def __init__(self, x_input, hl_in, C_in, batch_size, embedding_size):
+    def __init__(self, batch_size, emdedding_dimensions, hl_size):
         self.x_input = tf.placeholder(tf.float32,
-                                      shape=(batch_size, embedding_size), name="x_input")
+                                      shape=(batch_size, emdedding_dimensions), name="x_input")
 
-        self.C_in = C_in
+        self.hl_in = tf.placeholder(tf.float32,
+                                    shape=(hl_size, hl_size), name="hl_in")
 
-        self.hl_in = hl_in
+# Not sure about size of C...
+        self.C_in = tf.placeholder(tf.float32,
+                                   shape=(batch_size, emdedding_dimensions), name="C_in")
 
         self.z = np.stack(self.hl_in, self.x_input)
+

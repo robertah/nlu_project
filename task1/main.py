@@ -27,7 +27,6 @@ def main():
     dataset_filename = "input_data"
     model_to_load = False
 
-
     emb_dim = config['embeddings_size']
     len_sentences = config['sentence_len']
     vocab_dim = config['vocabulary_size']
@@ -46,19 +45,18 @@ def main():
         utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
         model_w2v, dataset = utils.load_data(data_file_path)
         model_w2v.save(data_folder_path+"/"+w2v_model_filename)
-        #np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
+        # np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
     else:
         utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
         model_w2v, dataset = utils.load_data(data_file_path)
         model_w2v = word2vec.Word2Vec.load(data_folder_path+"/"+w2v_model_filename)
-        #dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
-        #dataset = [x.strip("\n") for x in dataset]
+        # dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
+        # dataset = [x.strip("\n") for x in dataset]
     
-    #dataset_size=len(dataset)
-    #batches=train_utils.create_batches(1, batch_size, model_w2v, dataset, dataset_size)
-    #print("Printing batches dimensions")
-    #print(batches.shape)
-    
+    # dataset_size=len(dataset)
+    # batches=train_utils.create_batches(1, batch_size, model_w2v, dataset, dataset_size)
+    # print("Printing batches dimensions")
+    # print(batches.shape)
 
 
 main()

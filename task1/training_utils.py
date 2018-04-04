@@ -3,15 +3,15 @@ import numpy as np
 
 def word_2_vec(model_w2v, batch):
 
-
-    embedded_sentences=[]
-    #Embedding is performed per rows (sentences) so we need to transpose
+    embedded_sentences = []
+    # Embedding is performed per rows (sentences) so we need to transpose
 
     for sentence in batch: 
 
         embedded_sentences.append(model_w2v[sentence])
 
     return np.asarray(embedded_sentences)
+
 
 def create_batch(batch_size, model_w2v, dataset, dataset_size):
 
@@ -22,10 +22,11 @@ def create_batch(batch_size, model_w2v, dataset, dataset_size):
     for idx in idx_sentences:
         batch.append(dataset[idx])
 
-    #batch=dataset[:,idx_sentences]
+    # batch=dataset[:,idx_sentences]
     batch=word_2_vec(model_w2v, batch)
 
     return batch
+
 
 def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
 

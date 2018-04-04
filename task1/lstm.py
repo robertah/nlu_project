@@ -48,5 +48,13 @@ class ForwardLSTM():
         self.z_in = np.row_stack(self.hl_in, self.x_input)
 
     def forward(self):
-        #forget gate
-        f_t = sigmoid(np.dot(self.W_f, self.z_in))
+        # Gates
+        f_t = sigmoid(np.dot(self.W_f, self.z_in) + self.b_f)
+        i_t = sigmoid(np.dot(self.W_i, self.z_in) + self.b_i)
+        o_t = sigmoid(np.dot(self.W_o, self.z_in) + self.b_o)
+
+        C_interim = tanh(np.dot(self.W_c, self.z_in) + self.b_c)
+
+        # state update
+        C_t = f_t*C_interim + i_t*C_interim
+        hl_t = o_t*tanh(C_t)

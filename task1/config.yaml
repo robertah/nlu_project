@@ -1,5 +1,13 @@
+group_number: '20'
+
 path:
   data: '../data'  # data folder
+  train: '../data/sentences.train'
+  eval: '../data/sentences.eval'
+  cont: '../data/sentences.continuation'
+  embeddings: '../data/wordembeddings-dim100.word2vec'
+  output: '/output'
+
 
 token:
   bos: '<bos>'  # begin of sentence

@@ -34,17 +34,19 @@ def tanh(x):
     return np.tanh(x)
 
 
-class Inputs():
-    def __init__(self, batch_size, emdedding_dimensions, hl_size):
-        self.x_input = tf.placeholder(tf.float32,
-                                      shape=(batch_size, emdedding_dimensions), name="x_input")
+class ForwardLSTM():
+    def __init__(self, batch_size, embedding_dimensions, hl_size):
+        self.x_in = tf.placeholder(tf.float32,
+                                      shape=(batch_size, embedding_dimensions), name="x_input")
 
         self.hl_in = tf.placeholder(tf.float32,
                                     shape=(hl_size, hl_size), name="hl_in")
 
-# Not sure about size of C...
         self.C_in = tf.placeholder(tf.float32,
-                                   shape=(batch_size, emdedding_dimensions), name="C_in")
+                                   shape=(batch_size, embedding_dimensions), name="C_in")
 
-        self.z = np.stack(self.hl_in, self.x_input)
+        self.z_in = np.row_stack(self.hl_in, self.x_input)
 
+    def forward(self):
+        #forget gate
+        f_t = sigmoid(np.dot(self.W_f, self.z_in))

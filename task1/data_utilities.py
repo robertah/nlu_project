@@ -8,7 +8,7 @@ class data_utils:
 
     def __init__(self, model_to_load,emb_dim, nb_conc_words, nb_words_dictionary,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder):
 
-        self.emdedding_dimensions=emb_dim
+        self.embedding_dimensions=emb_dim
         self.max_nb_conc_words=nb_conc_words
         self.sentence_beginning=start_placeholder
         self.sentence_end=end_placeholder
@@ -20,7 +20,7 @@ class data_utils:
     def word_2_vec(self):
 
         if not self.model_to_load:
-            self.model_w2v = word2vec.Word2Vec(self.wrapped_sentences, size=self.emdedding_dimensions)
+            self.model_w2v = word2vec.Word2Vec(self.wrapped_sentences, size=self.embedding_dimensions)
             print("w2v model created according to the vocabulary")
         else:
             self.model_w2v = None

@@ -1,7 +1,8 @@
 import tensorflow as tf
 import numpy as np
 
-# In progress by Mel --> feel free to modify
+# In progress by Mel --> Started with initialization and Feedforward
+# Feel free to modify
 
 # variables used:
 # batch_size, embeddings_size

@@ -14,7 +14,6 @@ def perplexity(sentence, estimate, dictionary):
     '''
 
     # TODO verify dictionary
-    # TODO may need to use config.py instead of config.yaml for easier usage
     # TODO need to be tested
 
     i = 0

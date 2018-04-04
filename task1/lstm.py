@@ -21,3 +21,6 @@ class lstm(object):
 
     def sigmoid(self, x):
         return 1/(1 + np.exp(-x))
+
+    def tanh(x):
+        return np.tanh(x)

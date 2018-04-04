@@ -45,9 +45,10 @@ class ForwardLSTM():
         self.C_in = tf.placeholder(tf.float32,
                                    shape=(batch_size, embedding_dimensions), name="C_in")
 
-        self.z_in = np.row_stack(self.hl_in, self.x_input)
+    def forward(self, hl_in, C_in, x_input):
 
-    def forward(self):
+        z_in = np.row_stack(self.hl_in, self.x_input)
+
         # Gates
         f_t = sigmoid(np.dot(self.W_f, self.z_in) + self.b_f)
         i_t = sigmoid(np.dot(self.W_i, self.z_in) + self.b_i)
@@ -55,6 +56,8 @@ class ForwardLSTM():
 
         C_interim = tanh(np.dot(self.W_c, self.z_in) + self.b_c)
 
-        # state update
-        C_t = f_t*C_interim + i_t*C_interim
+        # State update
+        C_t = f_t*self.C_in + i_t*C_interim
         hl_t = o_t*tanh(C_t)
+
+        return f_t, i_t, o_t, C_interim, C_t, hl_t

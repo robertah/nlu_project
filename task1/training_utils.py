@@ -3,15 +3,15 @@ import numpy as np
 
 def word_2_vec(model_w2v, batch):
 
-    embedded_sentences = []
-    # Embedding is performed per rows (sentences) so we need to transpose
+
+    embedded_sentences=[]
+    #Embedding is performed per rows (sentences) so we need to transpose
 
     for sentence in batch: 
 
         embedded_sentences.append(model_w2v[sentence])
 
     return np.asarray(embedded_sentences)
-
 
 def create_batch(batch_size, model_w2v, dataset, dataset_size):
 
@@ -22,7 +22,7 @@ def create_batch(batch_size, model_w2v, dataset, dataset_size):
     for idx in idx_sentences:
         batch.append(dataset[idx])
 
-    # batch=dataset[:,idx_sentences]
+    #batch=dataset[:,idx_sentences]
     batch=word_2_vec(model_w2v, batch)
 
     return batch
@@ -34,7 +34,7 @@ def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
        The 1-st dimension represents the batch (multiple batches) -> 100 batches
        The 2-nd dimension represents the single word dimension -> 100 dimensions/word
        The 3-rd dimension represents the entire sentence -> 30 word/sentence
-       The 4-th dimension represemts the number of sentences per batch -> 64 sentences/batch
+       The 4-th dimension represents the number of sentences per batch -> 64 sentences/batch
     """
     batches=[]
 
@@ -51,3 +51,27 @@ def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
 
     print("Batches created")
     return np.array(batches)
+
+
+def batch_iter(data, batch_size, num_epochs, shuffle=True):
+    """
+    Generates a batch iterator for a dataset.
+    """
+    batches=[]
+    data = np.array(data)
+    data_size = len(data)
+    num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
+    for epoch in range(num_epochs):
+        # Shuffle the data at each epoch
+        if shuffle:
+            shuffle_indices = np.random.permutation(np.arange(data_size))
+            shuffled_data = data[shuffle_indices]
+        else:
+            shuffled_data = data
+        for batch_num in range(num_batches_per_epoch):
+            start_index = batch_num * batch_size
+            end_index = min((batch_num + 1) * batch_size, data_size)
+            #print(shuffled_data[start_index:end_index])
+            yield shuffled_data[start_index:end_index]
+            #batches.append(shuffled_data[start_index:end_index])
+    #return batches

@@ -105,8 +105,8 @@ class lstm_model():
                 updates, _ = tf.clip_by_global_norm(tf.gradients(self.loss, variables_to_update), clip_norm=5)
                 train_step = optimizer.apply_gradients(zip(updates, variables_to_update))
 
-                #self.init_state_hidden = init_state_hidden
-                #self.init_state_current = init_state_current
+            #self.init_state_hidden = init_state_hidden
+            #self.init_state_current = init_state_current
             with tf.name_scope("accuracy"):
                 correct_predictions = tf.equal(self.vocab_indices_predictions, self.vectorized_groundtruth)
                 self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")

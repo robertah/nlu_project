@@ -1,18 +1,20 @@
-"""Eager execution tensorflow to enable the recurrent computaton in the lstm"""
-#from __future__ import absolute_import, division, print_function
+from __future__ import absolute_import, division, print_function
 import tensorflow as tf
-#tf.enable_eager_execution()
-import yaml
-import os
-import data_utilities as data_utilities
-import training_utils as train_utils
-import model_lstm2
-import numpy as np
-from gensim.models import word2vec
-print("Tensorflow eager execution set to ",tf.executing_eagerly())
 import time
 import datetime
 from random import randint
+import yaml
+import data_utilities
+import model_lstm2
+import os
+import numpy as np
+import training_utils as train_utils
+
+"""Upgrade to TensorFlow 1.7 to include updates for eager execution:
+$ pip install --upgrade tensorflow
+Eager execution tensorflow to enable the recurrent computaton in the lstm"""
+
+
 """Resources used for implementation
    https://becominghuman.ai/understanding-tensorflow-source-code-rnn-cells-55464036fc07 
    https://www.tensorflow.org/tutorials/recurrent
@@ -21,6 +23,9 @@ from random import randint
    https://stackoverflow.com/questions/41455101/what-is-the-meaning-of-the-word-logits-in-tensorflow/43577384
    & others
    """
+
+print("Tensorflow eager execution set to ", tf.executing_eagerly())
+
 
 def main():
     # load variables from config.yml
@@ -42,78 +47,80 @@ def main():
     w2v_model_filename = "w2v_model"
     dataset_filename = "input_data"
     model_to_load = True
-    lstm_is_training=True
+    lstm_is_training = True
 
     emb_dim = config['embeddings_size']
     len_sentences = config['sentence_len']
     vocab_dim = config['vocabulary_size']
     start_placeholder = config['token']['bos']
-    end_placeholder = config['token']['eos']   
-    pad_placeholder = config['token']['pad']   
-    unk_placeholder = config['token']['unk']   
+    end_placeholder = config['token']['eos']
+    pad_placeholder = config['token']['pad']
+    unk_placeholder = config['token']['unk']
     data_folder_path = config['path']['data']
-    data_file_path = data_folder_path+"/sentences.train"
+    data_file_path = data_folder_path + "/sentences.train"
     nb_batches_per_epoch = config['batches_per_epoch']
     batch_size = config['batch_size']
-    
-    #TODO : to be determined (the following variables)
-    num_epochs = 3
-    checkpoint_every=100
-    evaluate_every=100
-    lstm_cell_state=512
 
+    # TODO : to be determined (the following variables)
+    num_epochs = 3
+    checkpoint_every = 100
+    evaluate_every = 100
+    lstm_cell_state = 512
 
     """ PARAMETERS INTO TENSORFLOW FLAGS
         -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
-    
-    #tf.flags.DEFINE_float("dev_sample_percentage", .1, "Percentage of the training data used for validation (default: 10%)")
+
+# tf.flags.DEFINE_float("dev_sample_percentage", .1,
+#                       "Percentage of the training data used for validation (default: 10%)")
     tf.flags.DEFINE_string("data_file_path", data_file_path, "Path to the training data")
     # Model parameters
     tf.flags.DEFINE_integer("embedding_dim", emb_dim, "Dimensionality of word embeddings (default: 50)")
     tf.flags.DEFINE_integer("vocab_size", vocab_dim, "Size of the vocabulary (default: 20k)")
-    #tf.flags.DEFINE_integer("past_words", 3, "How many previous words are used for prediction (default: 3)")
+    # tf.flags.DEFINE_integer("past_words", 3, "How many previous words are used for prediction (default: 3)")
     # Training parameters
     tf.flags.DEFINE_integer("batch_size", batch_size, "Batch Size (default: 64)")
     tf.flags.DEFINE_integer("num_epochs", num_epochs, "Number of training epochs (default: 200)")
-    tf.flags.DEFINE_integer("evaluate_every", evaluate_every, "Evaluate model on dev set after this many steps (default: 100)")
+    tf.flags.DEFINE_integer("evaluate_every", evaluate_every,
+                            "Evaluate model on dev set after this many steps (default: 100)")
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
     tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
     tf.flags.DEFINE_integer("lstm_cell_state", 512, "Number of units inside the lastm cell")
-    
+
     # Tensorflow Parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
     tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 
     # for running on EULER, adapt this
     tf.flags.DEFINE_integer("inter_op_parallelism_threads", 0,
-    "TF nodes that perform blocking operations are enqueued on a pool of inter_op_parallelism_threads available in each process (default 0).")
+                            "TF nodes that perform blocking operations are enqueued on a pool of inter_op_parallelism_threads available in each process (default 0).")
     tf.flags.DEFINE_integer("intra_op_parallelism_threads", 0,
-    "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
+                            "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
 
     """Create model and preprocess data, 
        or load the saved model (NOTE: not for experiment A) and the data preprocessed 
        in a previous run"""
 
-
     if not model_to_load:
-        utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
+        utils = data_utilities.data_utils(model_to_load, emb_dim, len_sentences, vocab_dim, start_placeholder,
+                                          end_placeholder, pad_placeholder, unk_placeholder)
         model_w2v, dataset = utils.load_data(data_file_path)
-        model_w2v.save(data_folder_path+"/"+w2v_model_filename)
-        #np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
+        model_w2v.save(data_folder_path + "/" + w2v_model_filename)
+        # np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
     else:
-        utils = data_utilities.data_utils(model_to_load,emb_dim,len_sentences,vocab_dim,start_placeholder,end_placeholder,pad_placeholder,unk_placeholder)
+        utils = data_utilities.data_utils(model_to_load, emb_dim, len_sentences, vocab_dim, start_placeholder,
+                                          end_placeholder, pad_placeholder, unk_placeholder)
         model_w2v, dataset = utils.load_data(data_file_path)
-        model_w2v = word2vec.Word2Vec.load(data_folder_path+"/"+w2v_model_filename)
-        #dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
-        #dataset = [x.strip("\n") for x in dataset]
-    
-    dataset_size=len(dataset)
-    print("Total sentences in the dataset: ",dataset_size)
-    print("Example of a random wrapped sentence in dataset ",dataset[(randint(0, dataset_size))])
-    print("Example of the first wrapped sentence in dataset ",dataset[0])
 
+        # Mel commented out next line
+        # model_w2v = word2vec.Word2Vec.load(data_folder_path + "/" + w2v_model_filename)
+        # dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
+        # dataset = [x.strip("\n") for x in dataset]
 
+    dataset_size = len(dataset)
+    print("Total sentences in the dataset: ", dataset_size)
+    print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
+    print("Example of the first wrapped sentence in dataset ", dataset[0])
 
     """Printing model configuration to command line"""
 
@@ -125,7 +132,7 @@ def main():
         print("{}={}".format(attr.upper(), value.value))
         # print("{}={}".format(attr.upper(), value))            # change to this if using tensorflow version <= 1.3
     print("")
-   
+
     """Creating the model and the logger, ready to train and log results"""
 
     with tf.Graph().as_default():
@@ -138,7 +145,7 @@ def main():
         with sess.as_default():
             # Initialize model
             lstm_network = model_lstm2.lstm_model(
-                vocab_size=FLAGS.vocab_size, 
+                vocab_size=FLAGS.vocab_size,
                 embedding_size=FLAGS.embedding_dim,
                 words_in_sentence=len_sentences,
                 batch_size=batch_size,
@@ -146,7 +153,7 @@ def main():
             )
 
         """Please note that the tf variables keeps updated, ready to be printed out or
-           logged to file""" 
+           logged to file"""
 
         global_step = tf.Variable(0, name="global_step", trainable=False)
         optimizer = tf.train.AdamOptimizer()
@@ -182,7 +189,6 @@ def main():
         sess.run(tf.global_variables_initializer())
         sess.graph.finalize()
 
-
         """All the training procedure below"""
         lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
         lstm_network.next_current_state = np.zeros([batch_size, lstm_cell_state])
@@ -200,14 +206,14 @@ def main():
                 lstm_network.init_state_current: lstm_network.next_current_state
             }
             _, step, summaries, loss, accuracy, new_hidden_state, new_current_state = sess.run(
-                [train_optimizer, global_step, train_summary_op, lstm_network.loss, 
-                lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current],
+                [train_optimizer, global_step, train_summary_op, lstm_network.loss,
+                 lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current],
                 feed_dict)
 
-            #print(lstm_network.predictions_per_sentence)
-            #tf.Print(lstm_network.predictions_per_sentence)
-            
-            #TODO: seems something goes wrong with passing calculating states below
+            # print(lstm_network.predictions_per_sentence)
+            # tf.Print(lstm_network.predictions_per_sentence)
+
+            # TODO: seems something goes wrong with passing calculating states below
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
 
@@ -231,29 +237,27 @@ def main():
             if writer:
                 writer.add_summary(summaries, step)
 
-        
-       
-        
         if lstm_is_training:
             """The network is training"""
 
             """batches is a generator, please refer to training_utilities for more information.
                batch_iter function is executed if an iteration is performed on op of it and it
                gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
-            batches = train_utils.batch_iter(data = dataset, batch_size = batch_size, num_epochs=num_epochs, shuffle=False, testing = False)
+            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
+                                             testing=False)
 
             for batch in batches:
 
                 x_batch, y_batch = zip(*batch)
-                
-                x_batch=train_utils.words_mapper_vocab_indices(x_batch,utils.vocabulary_words_list)
-                y_batch=train_utils.words_mapper_vocab_indices(y_batch,utils.vocabulary_words_list)
+
+                x_batch = train_utils.words_mapper_vocab_indices(x_batch, utils.vocabulary_words_list)
+                y_batch = train_utils.words_mapper_vocab_indices(y_batch, utils.vocabulary_words_list)
 
                 """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
-                train_step(x_batch = x_batch, y_batch = y_batch)
+                train_step(x_batch=x_batch, y_batch=y_batch)
                 current_step = tf.train.global_step(sess, global_step)
-                
-                #if current_step % FLAGS.evaluate_every == 0:
+
+                # if current_step % FLAGS.evaluate_every == 0:
                 #    print("\nEvaluation:")
                 #    dev_step(x_dev, y_dev, writer=dev_summary_writer)
                 #    print("")
@@ -261,17 +265,18 @@ def main():
                 if current_step % FLAGS.checkpoint_every == 0:
                     path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                     print("Saved model checkpoint to {}\n".format(path))
-            
+
         else:
             """The network is doing testing"""
-            batches = train_utils.batch_iter(data = dataset, batch_size = batch_size, num_epochs=num_epochs, shuffle=False, testing = False)
+            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
+                                             testing=False)
 
             for batch in batches:
 
                 x_batch, y_batch = zip(*batch)
                 train_step(x_batch, y_batch)
                 current_step = tf.train.global_step(sess, global_step)
-                
+
                 if current_step % FLAGS.evaluate_every == 0:
                     print("\nEvaluation:")
                     dev_step(x_dev, y_dev, writer=dev_summary_writer)
@@ -279,7 +284,6 @@ def main():
                 if current_step % FLAGS.checkpoint_every == 0:
                     path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                     print("Saved model checkpoint to {}\n".format(path))
-        
 
 
 main()

@@ -1,3 +1,7 @@
+"""Eager execution tensorflow to enable the recurrent computaton in the lstm"""
+#from __future__ import absolute_import, division, print_function
+import tensorflow as tf
+#tf.enable_eager_execution()
 import yaml
 import os
 import data_utilities as data_utilities
@@ -5,11 +9,10 @@ import training_utils as train_utils
 import model_lstm2
 import numpy as np
 from gensim.models import word2vec
-import tensorflow as tf
+print("Tensorflow eager execution set to ",tf.executing_eagerly())
 import time
 import datetime
-
-
+from random import randint
 """Resources used for implementation
    https://becominghuman.ai/understanding-tensorflow-source-code-rnn-cells-55464036fc07 
    https://www.tensorflow.org/tutorials/recurrent
@@ -39,7 +42,7 @@ def main():
     w2v_model_filename = "w2v_model"
     dataset_filename = "input_data"
     model_to_load = True
-
+    lstm_is_training=True
 
     emb_dim = config['embeddings_size']
     len_sentences = config['sentence_len']
@@ -60,8 +63,8 @@ def main():
     lstm_cell_state=512
 
 
-    ## PARAMETERS INTO TENSORFLOW FLAGS ## 
-    """ -> the advantage : Variables can be accessed from any python file without 
+    """ PARAMETERS INTO TENSORFLOW FLAGS
+        -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
     
     #tf.flags.DEFINE_float("dev_sample_percentage", .1, "Percentage of the training data used for validation (default: 10%)")
@@ -88,7 +91,6 @@ def main():
     tf.flags.DEFINE_integer("intra_op_parallelism_threads", 0,
     "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
 
-
     """Create model and preprocess data, 
        or load the saved model (NOTE: not for experiment A) and the data preprocessed 
        in a previous run"""
@@ -107,10 +109,13 @@ def main():
         #dataset = [x.strip("\n") for x in dataset]
     
     dataset_size=len(dataset)
-    
+    print("Total sentences in the dataset: ",dataset_size)
+    print("Example of a random wrapped sentence in dataset ",dataset[(randint(0, dataset_size))])
+    print("Example of the first wrapped sentence in dataset ",dataset[0])
 
 
-    """Printing model configuration"""
+
+    """Printing model configuration to command line"""
 
     FLAGS = tf.flags.FLAGS
     # FLAGS._parse_flags()          # add if using tensorflow version <= 1.3
@@ -179,29 +184,44 @@ def main():
 
 
         """All the training procedure below"""
+        lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
+        lstm_network.next_current_state = np.zeros([batch_size, lstm_cell_state])
 
-        def train_step(x_batch):
+        def train_step(x_batch, y_batch):
             """
-            A single training step
+            A single training step, x_batch = y_batch
+            Both are matrix indices of words
             """
+
             feed_dict = {
                 lstm_network.input_x: x_batch,
-                #lstm_network.input_x: x_batch
+                lstm_network.input_y: y_batch,
+                lstm_network.init_state_hidden: lstm_network.next_hidden_state,
+                lstm_network.init_state_current: lstm_network.next_current_state
             }
-            _, step, summaries, loss, accuracy = sess.run(
-                [train_optimizer, global_step, train_summary_op, lstm_network.loss, lstm_network.accuracy],
+            _, step, summaries, loss, accuracy, new_hidden_state, new_current_state = sess.run(
+                [train_optimizer, global_step, train_summary_op, lstm_network.loss, 
+                lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current],
                 feed_dict)
+
+            #print(lstm_network.predictions_per_sentence)
+            #tf.Print(lstm_network.predictions_per_sentence)
+            
+            #TODO: seems something goes wrong with passing calculating states below
+            lstm_network.next_hidden_state = new_hidden_state
+            lstm_network.next_current_state = new_current_state
+
             time_str = datetime.datetime.now().isoformat()
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
-        def dev_step(x_batch, writer=None):
+        def dev_step(x_batch, y_batch, writer=None):
             """
             Evaluates model on a dev set
             """
             feed_dict = {
                 lstm_network.input_x: x_batch,
-                #lstm_network.input_y: y_batch
+                lstm_network.input_y: y_batch
             }
             step, summaries, loss, accuracy = sess.run(
                 [global_step, dev_summary_op, lstm_network.loss, lstm_network.accuracy],
@@ -212,23 +232,54 @@ def main():
                 writer.add_summary(summaries, step)
 
         
-        ## TRAINING LOOP ##
-        """batches is a generator, please refer to training_utilities for more information.
-           batch_iter function is executed if iteration is performed and gives a new batch each time"""
+       
         
-        batches = train_utils.batch_iter(dataset, batch_size, num_epochs, False)
+        if lstm_is_training:
+            """The network is training"""
 
-        for batch in batches:
-            #x_batch, y_batch = zip(*batch)
-            train_step(batch)
-            current_step = tf.train.global_step(sess, global_step)
-            if current_step % FLAGS.evaluate_every == 0:
-                print("\nEvaluation:")
-                dev_step(x_dev, y_dev, writer=dev_summary_writer)
-                print("")
-            if current_step % FLAGS.checkpoint_every == 0:
-                path = saver.save(sess, checkpoint_prefix, global_step=current_step)
-                print("Saved model checkpoint to {}\n".format(path))
+            """batches is a generator, please refer to training_utilities for more information.
+               batch_iter function is executed if an iteration is performed on op of it and it
+               gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
+            batches = train_utils.batch_iter(data = dataset, batch_size = batch_size, num_epochs=num_epochs, shuffle=False, testing = False)
+
+            for batch in batches:
+
+                x_batch, y_batch = zip(*batch)
+                
+                x_batch=train_utils.words_mapper_vocab_indices(x_batch,utils.vocabulary_words_list)
+                y_batch=train_utils.words_mapper_vocab_indices(y_batch,utils.vocabulary_words_list)
+
+                """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
+                train_step(x_batch = x_batch, y_batch = y_batch)
+                current_step = tf.train.global_step(sess, global_step)
+                
+                #if current_step % FLAGS.evaluate_every == 0:
+                #    print("\nEvaluation:")
+                #    dev_step(x_dev, y_dev, writer=dev_summary_writer)
+                #    print("")
+                #    needed for perplexity calculation
+                if current_step % FLAGS.checkpoint_every == 0:
+                    path = saver.save(sess, checkpoint_prefix, global_step=current_step)
+                    print("Saved model checkpoint to {}\n".format(path))
+            
+        else:
+            """The network is doing testing"""
+            batches = train_utils.batch_iter(data = dataset, batch_size = batch_size, num_epochs=num_epochs, shuffle=False, testing = False)
+
+            for batch in batches:
+
+                x_batch, y_batch = zip(*batch)
+                train_step(x_batch, y_batch)
+                current_step = tf.train.global_step(sess, global_step)
+                
+                if current_step % FLAGS.evaluate_every == 0:
+                    print("\nEvaluation:")
+                    dev_step(x_dev, y_dev, writer=dev_summary_writer)
+                    print("")
+                if current_step % FLAGS.checkpoint_every == 0:
+                    path = saver.save(sess, checkpoint_prefix, global_step=current_step)
+                    print("Saved model checkpoint to {}\n".format(path))
+        
 
 
 main()

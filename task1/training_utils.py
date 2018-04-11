@@ -52,26 +52,48 @@ def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
     print("Batches created")
     return np.array(batches)
 
+def words_mapper_vocab_indices(x_batch, vocabulary_words_list):
+    """Map words in x_batch to the corresponding vocabulary index
+       returns x_batch with indices in place of the original words"""
 
-def batch_iter(data, batch_size, num_epochs, shuffle=True):
+    nb_sentences = len(x_batch)
+    nb_words = len(x_batch[0])
+
+    for idx_sentence in range(0,nb_sentences):
+
+        for idx_word in range(0,nb_words):
+
+            x_batch[idx_sentence][idx_word] = vocabulary_words_list.index(x_batch[idx_sentence][idx_word])
+
+    return x_batch
+
+
+
+def batch_iter(data, batch_size, num_epochs, shuffle = False, testing = False):
     """
-    Generates a batch iterator for a dataset.
+    Generates a batch generator for a dataset.
+    shuffle should stay false because on local pc we get memory error and the PC gets stucked
     """
+
     batches=[]
-    data = np.array(data)
+    #data = np.array(data)
     data_size = len(data)
     num_batches_per_epoch = int((len(data)-1)/batch_size) + 1
+
+
     for epoch in range(num_epochs):
+        
         # Shuffle the data at each epoch
         if shuffle:
             shuffle_indices = np.random.permutation(np.arange(data_size))
             shuffled_data = data[shuffle_indices]
         else:
             shuffled_data = data
+
         for batch_num in range(num_batches_per_epoch):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
             #print(shuffled_data[start_index:end_index])
-            yield shuffled_data[start_index:end_index]
+            
+            yield zip(shuffled_data[start_index:end_index],np.copy(shuffled_data[start_index:end_index]))
             #batches.append(shuffled_data[start_index:end_index])
-    #return batches

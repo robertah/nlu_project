@@ -65,8 +65,8 @@ class data_utils:
                 new_sentence=self.check_for_unknown_words(sentence, nb_words)
 
                 wrapped_sentence.extend(new_sentence)
-                wrapped_sentence.extend(self.padding_placeholder for i in range(0,padding_needed))
                 wrapped_sentence.append(self.sentence_end)
+                wrapped_sentence.extend(self.padding_placeholder for i in range(0,padding_needed))
 
                 self.wrapped_sentences.append(wrapped_sentence)
                 #print(wrapped_sentence)
@@ -113,6 +113,9 @@ class data_utils:
         self.vocabulary[self.padding_placeholder]=1
 
         self.vocabulary=self.vocabulary
+        self.vocabulary_words_list = list(self.vocabulary.keys())
+
+
         print("Vocabulary has been defined, its size is ",len(self.vocabulary))
 
 
@@ -158,6 +161,29 @@ class data_utils:
         self.wrapper_sentence_words()
         #self.do_sanity_checks()
         self.word_2_vec()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         return self.model_w2v, self.wrapped_sentences
 

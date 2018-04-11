@@ -205,13 +205,19 @@ def main():
                 lstm_network.init_state_hidden: lstm_network.next_hidden_state,
                 lstm_network.init_state_current: lstm_network.next_current_state
             }
-            _, step, summaries, loss, accuracy, new_hidden_state, new_current_state = sess.run(
+            _, step, summaries, loss, accuracy, new_hidden_state, new_current_state, vocab_idx_predictions = sess.run(
                 [train_optimizer, global_step, train_summary_op, lstm_network.loss,
-                 lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current],
+                 lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current, lstm_network.vocab_indices_predictions],
                 feed_dict)
 
             # print(lstm_network.predictions_per_sentence)
             # tf.Print(lstm_network.predictions_per_sentence)
+            print("Predictions indices w.r.t vocabulary")
+            print(vocab_idx_predictions)
+            print("Example of sentence predicted by the network by training")
+            print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list, is_tuple = True)[0:29])
+            print("Groundtruth for the sentence predicted by the network above")
+            print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch,[batch_size*30]), utils.vocabulary_words_list)[0:29])
 
             # TODO: seems something goes wrong with passing calculating states below
             lstm_network.next_hidden_state = new_hidden_state
@@ -250,8 +256,8 @@ def main():
 
                 x_batch, y_batch = zip(*batch)
 
-                x_batch = train_utils.words_mapper_vocab_indices(x_batch, utils.vocabulary_words_list)
-                y_batch = train_utils.words_mapper_vocab_indices(y_batch, utils.vocabulary_words_list)
+                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
+                y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, utils.vocabulary_words_list)
 
                 """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
                 train_step(x_batch=x_batch, y_batch=y_batch)

@@ -52,7 +52,7 @@ def create_batches(nb_batches, batch_size, model_w2v, dataset, dataset_size):
     print("Batches created")
     return np.array(batches)
 
-def words_mapper_vocab_indices(x_batch, vocabulary_words_list):
+def words_mapper_to_vocab_indices(x_batch, vocabulary_words_list):
     """Map words in x_batch to the corresponding vocabulary index
        returns x_batch with indices in place of the original words"""
 
@@ -66,6 +66,28 @@ def words_mapper_vocab_indices(x_batch, vocabulary_words_list):
             x_batch[idx_sentence][idx_word] = vocabulary_words_list.index(x_batch[idx_sentence][idx_word])
 
     return x_batch
+
+
+def words_mapper_from_vocab_indices(indices_predictions, vocabulary_words_list, is_tuple = False):
+    """Map words in x_batch to the corresponding vocabulary index
+       returns x_batch with indices in place of the original words"""
+
+    if is_tuple:
+        indices_predictions=list(indices_predictions)
+    
+    nb_words_vocabulary_indices = len(indices_predictions)
+    print("NB words ",nb_words_vocabulary_indices)
+    #print(list(indices_predictions))
+    #nb_words_vocabulary_indices = len(indices_predictions[0])
+
+    #for idx_sentence in range(0,nb_sentences):
+    words_of_sentences=[]
+
+    for idx_word in range(nb_words_vocabulary_indices):
+
+            words_of_sentences.append(vocabulary_words_list[indices_predictions[idx_word]])
+
+    return words_of_sentences
 
 
 

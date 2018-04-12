@@ -57,9 +57,9 @@ def main():
     num_epochs = 3
     checkpoint_every = 100
     evaluate_every = 100
-    lstm_cell_state = 1024
+    lstm_cell_state = 512
     lstm_cell_state_down = 512
-    training_with_w2v = True
+    training_with_w2v = False
 
     if lstm_cell_state > lstm_cell_state_down:
         down_project=True

@@ -35,9 +35,6 @@ class lstm_model():
                 embedded_input = tf.nn.embedding_lookup(self.W_embedding,
                                                         self.input_x)  # [batch_size, num_steps, word_embedding_size]
 
-                # self.W =tf.random_uniform([vocab_size, embedding_size], -0.1, 0.1) #[vocab_size, embedded_word_size]
-                # embedded_input = tf.nn.embedding_lookup(self.W, self.input_x) # [batch_size, words_in_sentence, embedding_size] words_in_sentence -> num_steps
-
             """ lstm forward propagation """
             with tf.variable_scope("lstm_layer"):
                 """ The lstm cell is composed by several units """
@@ -58,8 +55,6 @@ class lstm_model():
                     """final_lstm_state is useful for perplexity evaluation"""
 
                 self.final_lstm_state = lstm_new_state
-            # print(self.final_lstm_state)
-            # print(len(self.final_lstm_state))
 
             """Note that history_predictions now has to be reshaped, since each array appended
                in the for cycle has the next (i+1)-th word predicted, but we want predictions 
@@ -85,10 +80,7 @@ class lstm_model():
                 W_soft = tf.Variable(tf.random_uniform([lstm_cell_size, vocab_size], -0.1, 0.1),
                                      name="W_soft")  # [vocab_size, embedded_word_size]
                 b_soft = tf.Variable(tf.random_uniform([vocab_size], -0.1, 0.1), name="b_soft")  # [vocab_size]
-                # W_soft = tf.Variable("W", [lstm_cell_size, vocab_size], tf.float32,
-                # initializer=tf.contrib.layers.xavier_initializer()) W_soft = tf.get_variable("W_soft",
-                # [lstm_cell_size, vocab_size], tf.float32, initializer=tf.contrib.layers.xavier_initializer())
-                # b_soft = tf.get_variable("b_soft",[vocab_size], tf.float32, initializer=tf.zeros_initializer())
+
 
                 """Please note: predictions_words is a vector which has nb_sentences*nb_words_per_sentence
                     as number of rows and hidden representation (lstm_cell_size) as feature columns."""
@@ -120,8 +112,6 @@ class lstm_model():
                 updates, _ = tf.clip_by_global_norm(tf.gradients(self.loss, variables_to_update), clip_norm=5)
                 train_step = optimizer.apply_gradients(zip(updates, variables_to_update))
 
-            # self.init_state_hidden = init_state_hidden
-            # self.init_state_current = init_state_current
             with tf.name_scope("accuracy"):
                 correct_predictions = tf.equal(self.vocab_indices_predictions, self.vectorized_groundtruth)
                 self.accuracy = tf.reduce_mean(tf.cast(correct_predictions, "float"), name="accuracy")

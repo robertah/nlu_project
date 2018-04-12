@@ -3,7 +3,7 @@ import tensorflow as tf
 import time
 import datetime
 from random import randint
-import yaml
+from config import *
 import data_utilities
 import model_lstm2
 import os
@@ -29,11 +29,11 @@ print("Tensorflow eager execution set to ", tf.executing_eagerly())
 
 def main():
     # load variables from config.yml
-    with open('config.yaml', 'r') as stream:
-        try:
-            config = yaml.load(stream)
-        except yaml.YAMLError as exc:
-            print(exc)
+    # with open('config.yaml', 'r') as stream:
+    #     try:
+    #         config = yaml.load(stream)
+    #     except yaml.YAMLError as exc:
+    #         print(exc)
     '''    Testing if it works
     print(config['token']['bos'])
 
@@ -49,17 +49,17 @@ def main():
     model_to_load = True
     lstm_is_training = True
 
-    emb_dim = config['embeddings_size']
-    len_sentences = config['sentence_len']
-    vocab_dim = config['vocabulary_size']
-    start_placeholder = config['token']['bos']
-    end_placeholder = config['token']['eos']
-    pad_placeholder = config['token']['pad']
-    unk_placeholder = config['token']['unk']
-    data_folder_path = config['path']['data']
-    data_file_path = data_folder_path + "/sentences.train"
-    nb_batches_per_epoch = config['batches_per_epoch']
-    batch_size = config['batch_size']
+    # embedding_size = config['embeddings_size']
+    # sentence_len = config['sentence_len']
+    # vocabulary_size = config['vocabulary_size']
+    # bos = config['token']['bos']
+    # eos = config['token']['eos']
+    # pad = config['token']['pad']
+    # unk = config['token']['unk']
+    # data_folder = config['path']['data']
+    # train_set = data_folder + "/sentences.train"
+    # batches_per_epoch = config['batches_per_epoch']
+    # batch_size = config['batch_size']
 
     # TODO : to be determined (the following variables)
     num_epochs = 3
@@ -73,10 +73,10 @@ def main():
 
 # tf.flags.DEFINE_float("dev_sample_percentage", .1,
 #                       "Percentage of the training data used for validation (default: 10%)")
-    tf.flags.DEFINE_string("data_file_path", data_file_path, "Path to the training data")
+    tf.flags.DEFINE_string("train_set", train_set, "Path to the training data")
     # Model parameters
-    tf.flags.DEFINE_integer("embedding_dim", emb_dim, "Dimensionality of word embeddings (default: 50)")
-    tf.flags.DEFINE_integer("vocab_size", vocab_dim, "Size of the vocabulary (default: 20k)")
+    tf.flags.DEFINE_integer("embedding_dim", embeddings_size, "Dimensionality of word embeddings (default: 50)")
+    tf.flags.DEFINE_integer("vocab_size", vocabulary_size, "Size of the vocabulary (default: 20k)")
     # tf.flags.DEFINE_integer("past_words", 3, "How many previous words are used for prediction (default: 3)")
     # Training parameters
     tf.flags.DEFINE_integer("batch_size", batch_size, "Batch Size (default: 64)")
@@ -102,19 +102,19 @@ def main():
        in a previous run"""
 
     if not model_to_load:
-        utils = data_utilities.data_utils(model_to_load, emb_dim, len_sentences, vocab_dim, start_placeholder,
-                                          end_placeholder, pad_placeholder, unk_placeholder)
-        model_w2v, dataset = utils.load_data(data_file_path)
-        model_w2v.save(data_folder_path + "/" + w2v_model_filename)
-        # np.savetxt(data_folder_path+"/"+dataset_filename,dataset,newline="\n")
+        utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
+                                          eos, pad, unk)
+        model_w2v, dataset = utils.load_data(train_set)
+        model_w2v.save(data_folder + "/" + w2v_model_filename)
+        # np.savetxt(data_folder+"/"+dataset_filename,dataset,newline="\n")
     else:
-        utils = data_utilities.data_utils(model_to_load, emb_dim, len_sentences, vocab_dim, start_placeholder,
-                                          end_placeholder, pad_placeholder, unk_placeholder)
-        model_w2v, dataset = utils.load_data(data_file_path)
+        utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
+                                          eos, pad, unk)
+        model_w2v, dataset = utils.load_data(train_set)
 
         # Mel commented out next line
-        # model_w2v = word2vec.Word2Vec.load(data_folder_path + "/" + w2v_model_filename)
-        # dataset = np.loadtxt(data_folder_path+"/"+data_folder_path, delimiter="\n")
+        # model_w2v = word2vec.Word2Vec.load(data_folder + "/" + w2v_model_filename)
+        # dataset = np.loadtxt(data_folder+"/"+data_folder, delimiter="\n")
         # dataset = [x.strip("\n") for x in dataset]
 
     dataset_size = len(dataset)
@@ -147,7 +147,7 @@ def main():
             lstm_network = model_lstm2.lstm_model(
                 vocab_size=FLAGS.vocab_size,
                 embedding_size=FLAGS.embedding_dim,
-                words_in_sentence=len_sentences,
+                words_in_sentence=sentence_len,
                 batch_size=batch_size,
                 lstm_cell_size=lstm_cell_state
             )

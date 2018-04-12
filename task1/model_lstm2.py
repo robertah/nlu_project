@@ -6,7 +6,8 @@ import numpy as np
 class lstm_model():
 
     def __init__(self, vocab_size, embedding_size, words_in_sentence, batch_size,
-                 lstm_cell_size):  # sequence_length, filter_sizes, num_filters, l2_reg_lambda=0.0
+                 lstm_cell_size,lstm_cell_size_down,down_project):  
+                 # sequence_length, filter_sizes, num_filters, l2_reg_lambda=0.0
 
         """Minibatch placeholders for input and output"""
         self.input_x = tf.placeholder(tf.int64, [batch_size, words_in_sentence], name="input_x")
@@ -28,13 +29,10 @@ class lstm_model():
 
             """Embedding layer , word -> embedding dimensions"""
             with tf.variable_scope("embedding_layer"):
-                W_embedding = tf.Variable(tf.random_uniform([vocab_size, embedding_size], -0.1, 0.1),
+                self.W_embedding = tf.Variable(tf.random_uniform([vocab_size, embedding_size], -0.1, 0.1),
                                           name="W_embedding")  # [vocab_size, embedded_word_size]
 
-                W_embedding = tf.get_variable(name="W_embedding",
-                                              initializer=tf.random_uniform([vocab_size, embedding_size], -1.0,
-                                                                            1.0))  # [vocabulary_size, word_embedding_size]
-                embedded_input = tf.nn.embedding_lookup(W_embedding,
+                embedded_input = tf.nn.embedding_lookup(self.W_embedding,
                                                         self.input_x)  # [batch_size, num_steps, word_embedding_size]
 
                 # self.W =tf.random_uniform([vocab_size, embedding_size], -0.1, 0.1) #[vocab_size, embedded_word_size]
@@ -70,10 +68,19 @@ class lstm_model():
             self.predictions_per_sentence = tf.reshape(history_predictions,
                                                        [batch_size * words_in_sentence, lstm_cell_size])
 
+            if down_project:
+                print("Creating down project layer")
+                with tf.variable_scope("down_project_layer"):
+                    W_down = tf.Variable(tf.random_uniform([lstm_cell_size, lstm_cell_size_down], -0.1, 0.1),
+                                          name="W_down")
+                    self.predictions_per_sentence = tf.matmul(self.predictions_per_sentence,
+                                        W_down)
+                    lstm_cell_size=lstm_cell_size_down
+
             """ Numerical predictions have to go through a softmax layer to get probabilities -> most probable word
                 Requires : vocabulary size for predictions & numerical hidden predictions """
 
-            with tf.variable_scope("softmax_out"):
+            with tf.variable_scope("softmax_out_layer"):
 
                 W_soft = tf.Variable(tf.random_uniform([lstm_cell_size, vocab_size], -0.1, 0.1),
                                      name="W_soft")  # [vocab_size, embedded_word_size]

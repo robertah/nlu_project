@@ -103,3 +103,4 @@ ENV/
 
 pos-tagger/*
 pos-tagger-official-solution/*
+data/*

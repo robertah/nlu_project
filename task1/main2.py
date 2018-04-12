@@ -9,6 +9,7 @@ import model_lstm2
 import os
 import numpy as np
 import training_utils as train_utils
+import load_embeddings as load_embeddings
 
 """Upgrade to TensorFlow 1.7 to include updates for eager execution:
 $ pip install --upgrade tensorflow
@@ -44,39 +45,39 @@ def main():
 
     """load configs & data -> preprocessing"""
 
+
+
+    """TODO: -> all to be put in the config file. Change all variables u want but change them everywhere please aftwerwards"""
+
     w2v_model_filename = "w2v_model"
     dataset_filename = "input_data"
+    w2v_dataset_name="wordembeddings-dim100.word2vec"
     model_to_load = True
     lstm_is_training = True
-
-    # embedding_size = config['embeddings_size']
-    # sentence_len = config['sentence_len']
-    # vocabulary_size = config['vocabulary_size']
-    # bos = config['token']['bos']
-    # eos = config['token']['eos']
-    # pad = config['token']['pad']
-    # unk = config['token']['unk']
-    # data_folder = config['path']['data']
-    # train_set = data_folder + "/sentences.train"
-    # batches_per_epoch = config['batches_per_epoch']
-    # batch_size = config['batch_size']
-
-    # TODO : to be determined (the following variables)
     num_epochs = 3
     checkpoint_every = 100
     evaluate_every = 100
-    lstm_cell_state = 512
+    lstm_cell_state = 1024
+    lstm_cell_state_down = 512
+    training_with_w2v = True
+
+    if lstm_cell_state > lstm_cell_state_down:
+        down_project=True
+    else:
+        down_project=False
 
     """ PARAMETERS INTO TENSORFLOW FLAGS
         -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
+    
+    """TODO: make order with all this , decide if to delete or to keep"""
 
-# tf.flags.DEFINE_float("dev_sample_percentage", .1,
-#                       "Percentage of the training data used for validation (default: 10%)")
+    # tf.flags.DEFINE_float("dev_sample_percentage", .1,
+    #                       "Percentage of the training data used for validation (default: 10%)")
     tf.flags.DEFINE_string("train_set", train_set, "Path to the training data")
     # Model parameters
-    tf.flags.DEFINE_integer("embedding_dim", embeddings_size, "Dimensionality of word embeddings (default: 50)")
-    tf.flags.DEFINE_integer("vocab_size", vocabulary_size, "Size of the vocabulary (default: 20k)")
+    tf.flags.DEFINE_integer("embeddings_size", embeddings_size, "Dimensionality of word embeddings (default: 50)")
+    tf.flags.DEFINE_integer("vocabulary_size", vocabulary_size, "Size of the vocabulary (default: 20k)")
     # tf.flags.DEFINE_integer("past_words", 3, "How many previous words are used for prediction (default: 3)")
     # Training parameters
     tf.flags.DEFINE_integer("batch_size", batch_size, "Batch Size (default: 64)")
@@ -85,7 +86,8 @@ def main():
                             "Evaluate model on dev set after this many steps (default: 100)")
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
     tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
-    tf.flags.DEFINE_integer("lstm_cell_state", 512, "Number of units inside the lastm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the lastm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lastm cell")
 
     # Tensorflow Parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -97,30 +99,7 @@ def main():
     tf.flags.DEFINE_integer("intra_op_parallelism_threads", 0,
                             "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
 
-    """Create model and preprocess data, 
-       or load the saved model (NOTE: not for experiment A) and the data preprocessed 
-       in a previous run"""
 
-    if not model_to_load:
-        utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
-                                          eos, pad, unk)
-        model_w2v, dataset = utils.load_data(train_set)
-        model_w2v.save(data_folder + "/" + w2v_model_filename)
-        # np.savetxt(data_folder+"/"+dataset_filename,dataset,newline="\n")
-    else:
-        utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
-                                          eos, pad, unk)
-        model_w2v, dataset = utils.load_data(train_set)
-
-        # Mel commented out next line
-        # model_w2v = word2vec.Word2Vec.load(data_folder + "/" + w2v_model_filename)
-        # dataset = np.loadtxt(data_folder+"/"+data_folder, delimiter="\n")
-        # dataset = [x.strip("\n") for x in dataset]
-
-    dataset_size = len(dataset)
-    print("Total sentences in the dataset: ", dataset_size)
-    print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
-    print("Example of the first wrapped sentence in dataset ", dataset[0])
 
     """Printing model configuration to command line"""
 
@@ -145,11 +124,14 @@ def main():
         with sess.as_default():
             # Initialize model
             lstm_network = model_lstm2.lstm_model(
-                vocab_size=FLAGS.vocab_size,
-                embedding_size=FLAGS.embedding_dim,
+                vocab_size=FLAGS.vocabulary_size,
+                embedding_size=FLAGS.embeddings_size,
                 words_in_sentence=sentence_len,
                 batch_size=batch_size,
-                lstm_cell_size=lstm_cell_state
+                lstm_cell_size=lstm_cell_state,
+                lstm_cell_size_down=lstm_cell_state_down,
+                down_project=down_project
+
             )
 
         """Please note that the tf variables keeps updated, ready to be printed out or
@@ -187,7 +169,7 @@ def main():
 
         """ Initialize all variables """
         sess.run(tf.global_variables_initializer())
-        sess.graph.finalize()
+        #sess.graph.finalize()
 
         """All the training procedure below"""
         lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
@@ -196,7 +178,7 @@ def main():
         def train_step(x_batch, y_batch):
             """
             A single training step, x_batch = y_batch
-            Both are matrix indices of words
+            Both are matrices indices of words
             """
 
             feed_dict = {
@@ -210,8 +192,7 @@ def main():
                  lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current, lstm_network.vocab_indices_predictions],
                 feed_dict)
 
-            # print(lstm_network.predictions_per_sentence)
-            # tf.Print(lstm_network.predictions_per_sentence)
+
             print("Predictions indices w.r.t vocabulary")
             print(vocab_idx_predictions)
             print("Example of sentence predicted by the network by training")
@@ -219,7 +200,6 @@ def main():
             print("Groundtruth for the sentence predicted by the network above")
             print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch,[batch_size*30]), utils.vocabulary_words_list)[0:29])
 
-            # TODO: seems something goes wrong with passing calculating states below
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
 
@@ -230,6 +210,7 @@ def main():
         def dev_step(x_batch, y_batch, writer=None):
             """
             Evaluates model on a dev set
+            TODO: it is not set properly , so change stuff if needed
             """
             feed_dict = {
                 lstm_network.input_x: x_batch,
@@ -243,14 +224,40 @@ def main():
             if writer:
                 writer.add_summary(summaries, step)
 
+
+
+
+
+        """Create model and preprocess data"""
+
+        utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
+                                          eos, pad, unk)
+
+        model_w2v, dataset = utils.load_data(train_set)
+        dataset_size = len(dataset)
+        
+        print("Total sentences in the dataset: ", dataset_size)
+        print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
+        print("Example of the first wrapped sentence in dataset ", dataset[0])
+
         if lstm_is_training:
             """The network is training"""
+
+            if training_with_w2v:
+
+
+                Total_IDs = len(utils.vocabulary_words_list)
+
+                vocab_and_IDs = dict(zip(utils.vocabulary_words_list,[idx for idx in range(Total_IDs)]))
+
+                load_embeddings.load_embedding(session = sess, vocab = vocab_and_IDs, emb = lstm_network.W_embedding, path=data_folder+"/"+embeddings, dim_embedding=embeddings_size, vocab_size=Total_IDs)
+
 
             """batches is a generator, please refer to training_utilities for more information.
                batch_iter function is executed if an iteration is performed on op of it and it
                gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
             batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
-                                             testing=False)
+                                                 testing=False)
 
             for batch in batches:
 
@@ -263,6 +270,7 @@ def main():
                 train_step(x_batch=x_batch, y_batch=y_batch)
                 current_step = tf.train.global_step(sess, global_step)
 
+                """Decomment and implement if neeeded"""
                 # if current_step % FLAGS.evaluate_every == 0:
                 #    print("\nEvaluation:")
                 #    dev_step(x_dev, y_dev, writer=dev_summary_writer)
@@ -273,7 +281,9 @@ def main():
                     print("Saved model checkpoint to {}\n".format(path))
 
         else:
-            """The network is doing testing"""
+            """The network is doing predictions"""
+
+            """TODO: task 2 to implement"""
             batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
                                              testing=False)
 

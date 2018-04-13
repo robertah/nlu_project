@@ -5,6 +5,9 @@ File containing configuration variables used across the project
 # number of the group for the project
 n_group = '20'
 
+# experiment
+experiment = 'A'  # 'B' or 'C'  # TODO pass the parameter with command line?
+
 # path to data sets and output files
 data_folder = '../data'  # data folder
 train_set = '../data/sentences.train'

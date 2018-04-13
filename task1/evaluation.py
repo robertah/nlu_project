@@ -108,7 +108,7 @@ def test(test_data):
 
             print("Evaluating...")
             for i, batch in enumerate(batches):
-                # TODO may need to put words_mapper_to_vocab_indices since it is used also for testing
+                # TODO may need to put words_mapper_to_vocab_indices in data utils since it is used also for testing
                 x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
 
                 feed_dict = {

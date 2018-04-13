@@ -35,9 +35,9 @@ def perplexity(sentence, estimate):
 
 def write_perplexity(perplexities):
     """
-    Write perplexities of a batch of test sentences
+    Write perplexities on file
 
-    :param perplexities: perplexities of a batch of test sentences
+    :param perplexities: perplexities of test sentences
     """
 
     output_file = "{}/group{}.perplexity{}".format(output_folder, n_group, experiment)
@@ -48,7 +48,14 @@ def write_perplexity(perplexities):
 
 
 def test(test_data):
+    """
+    Test step: restore the trained model and compute the perplexities for the test data
+
+    :param test_data: dataset used for testing
+    """
+
     print("Testing...")
+
     # TODO change eval_set into test_set when we have test data
 
     # Data loading parameters
@@ -67,7 +74,6 @@ def test(test_data):
     for attr, value in sorted(FLAGS.__flags.items()):
         print("{}={}".format(attr.upper(), value.value))
     print("")
-
 
     print("Loading and preprocessing test dataset \n")
 

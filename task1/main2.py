@@ -45,22 +45,6 @@ def main():
 
     """load configs & data -> preprocessing"""
 
-
-
-    """TODO: -> all to be put in the config file. Change all variables u want but change them everywhere please aftwerwards"""
-
-    w2v_model_filename = "w2v_model"
-    dataset_filename = "input_data"
-    w2v_dataset_name="wordembeddings-dim100.word2vec"
-    model_to_load = True
-    lstm_is_training = True
-    num_epochs = 3
-    checkpoint_every = 100
-    evaluate_every = 100
-    lstm_cell_state = 512
-    lstm_cell_state_down = 512
-    training_with_w2v = False
-
     if lstm_cell_state > lstm_cell_state_down:
         down_project=True
     else:

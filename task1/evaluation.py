@@ -3,31 +3,34 @@ import numpy as np
 import tensorflow as tf
 import data_utilities
 from random import randint
+import training_utils as train_utils
+
 
 def perplexity(sentence, estimate):
     """
     Compute the perplexity of a sentence given its estimate and the word dictionary
 
-    :param sentence: a sentence of test set
-    :param estimate: the estimate of the sentence
+    :param sentence: a sentence (in vector form) of test set (sentence_len)
+    :param estimate: the estimate of the sentence (sentence_len - 1, vocabulary_size)
 
     :return: perplexity of the given sentence
     """
 
     i = 0
-    perp_sum = 0
+    probs = []  # array with word probabilities
 
+    # iterate until we reach the end of the sentence or a pad token
     while i < (sentence_len - 1) and sentence[i] != pad:
-        v = estimate[i]
-        softmax = np.exp(v) / np.sum(np.exp(v), axis=0)
-        print(softmax)
-        perp_sum += np.log2(softmax[sentence[i]])
+        # take the probability related to the true word
+        groundtruth_prob = estimate[i][sentence[i]]  # TODO do we start from 1 or 0 in vocabulary?
+        probs.append(groundtruth_prob)
         i += 1
 
-    perplexity = np.power(2, -(1 / i) * perp_sum)
-    print(perplexity)
+    # compute the perplexity
+    sentence_perplexity = np.power(2, -1 * (np.log2(probs)).mean())
+    print(sentence_perplexity)
 
-    return perplexity
+    return sentence_perplexity
 
 
 def write_perplexity(perplexities):
@@ -96,23 +99,30 @@ def test(test_data):
             init_state_current = graph.get_operation_by_name("init_state_current").outputs[0]
 
             # Evaluation
-            pred = graph.get_operation_by_name("softmax_out_layer/predictions").outputs[0]
+            prediction = graph.get_operation_by_name("softmax_out_layer/predictions").outputs[0]
 
             # Create batches for the test data, shuffle not needed
             batches = data_utilities.batch_iter(list(test_data), FLAGS.batch_size, 1, shuffle=False)
 
-            perplexities = []
+            perplexities = []  # array with perplexities for each sentence
 
+            print("Evaluating...")
             for i, batch in enumerate(batches):
+                # TODO may need to put words_mapper_to_vocab_indices since it is used also for testing
+                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
+
                 feed_dict = {
                     input_x: batch,
                     init_state_hidden: np.zeros(batch_size, lstm_cell_state),
                     init_state_current: np.zeros(batch_size, lstm_cell_state)
                 }
-                estimate = sess.run(pred, feed_dict)
-                print("Prediction {}: {}".format(i, estimate))
-                perplexity = perplexity(batch, estimate)
-                perplexities = np.concatenate([perplexities, perplexity])
+                estimates = sess.run(prediction, feed_dict)
 
+                for j, sentence in enumerate(batch):
+                    print("Sentence {} in batch {}".format(j, i))
+                    sentence_perplexity = perplexity(sentence, estimates[j])
+                    perplexities = np.concatenate([perplexities, sentence_perplexity])
+
+    print("Check if perplexities and test set have the same size: ", len(perplexities) == dataset_size)
     write_perplexity(perplexities)
 

@@ -4,11 +4,13 @@ The goal of this project was to build a simple language model based on a recurre
 
 **Note**: Tensorflow cells were used, but no  the actual RNN had to be built.
 
-<### Steps
-Part1.A: Train the model and compute sentence perplexity on the evaluation set
-     .B: Use word embeddings (word2vec), then repeat step A
-     .C: Increase hidden dimensionality, then repeat step A
-Part 2: Credict the next word given the previous hidden state and the previous word.>
+### Steps
+Part1: <br />
+A: Train the model and compute sentence perplexity on the evaluation set <br />
+B: Use word embeddings (word2vec), then repeat step A <br />
+C: Increase hidden dimensionality, then repeat step A <br />
+Part 2: <br />
+Predict the next word given the previous hidden state and the previous word.
 
 
 ### Files

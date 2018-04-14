@@ -47,3 +47,4 @@ w2v_dataset_name = "wordembeddings-dim100.word2vec"  # TODO not used
 model_to_load = True
 lstm_is_training = True  # TODO need to be set at runtime?
 training_with_w2v = False
+shuffle_training = False

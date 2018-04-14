@@ -13,7 +13,7 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 
 
 ### Files
-- **config.py** - Contains of the configuration variables used in the project
+- **config.py** - Contains the configuration variables used in the project
 - **data_utilities.py** - Used for data preprocessing (tokenizing first 28 words of sentence, adding special tokens
  (`<bos>`, `<eos>`, `<unk>`, `<pad>`),...)
 - **training_utils.py** - Contains conversion from word to vector (and vice versa), and creates batches for training purposes
@@ -25,5 +25,5 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 ### Note
 - To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`) in a `./data` folder at the same level as the task1 folder
 
-- To visualize graph in Tensorboard, type in terminal:
-`$ tensorboard --logdir=/<path-to-project>/nlu_project/tas/runs/<run-IDnumber>/summaries/train`
+- To visualize graph in Tensorboard, type in terminal:<br />
+`$ tensorboard --logdir=/<path-to-project>/tas/runs/<run-IDnumber>/summaries/train`

@@ -1,4 +1,5 @@
-# Project1 for Natural Language Understanding course - ETH Zurich, Spring 2018
+# Natural Language Understanding - ETH Zurich, Spring 2018
+## Project1: RNN Language Modelling with Tensorflow and Continuation of Sentences
 
 The goal of this project was to build a simple language model based on a recurrent neural network with LSTM cells.
 

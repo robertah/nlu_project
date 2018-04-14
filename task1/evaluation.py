@@ -4,6 +4,7 @@ import tensorflow as tf
 import data_utilities
 from random import randint
 import training_utils as train_utils
+import os
 
 
 def perplexity(sentence, estimate, vocabulary):
@@ -20,18 +21,21 @@ def perplexity(sentence, estimate, vocabulary):
     # get <pad> index in vocabulary
     index_pad = vocabulary.index(pad)
 
-    i = 0
+    i = 1
     probs = []  # array with word probabilities
 
     # iterate until we reach the end of the sentence or a pad token
     while i < (sentence_len - 1) and sentence[i] != index_pad:
         # take the probability related to the true word
-        groundtruth_prob = estimate[i][sentence[i]]  # TODO do we start from 1 or 0 in vocabulary?
+        groundtruth_prob = estimate[i]  # removed: [sentence[i]]
+        # removed: groundtruth_prob = estimate[i][sentence[i]] #  TODO do we start from 1 or 0 in vocabulary?
         probs.append(groundtruth_prob)
         i += 1
 
     # compute the perplexity
     sentence_perplexity = np.power(2, -1 * (np.log2(probs)).mean())
+
+    print(sentence_perplexity)
 
     return sentence_perplexity
 
@@ -89,7 +93,13 @@ def test():
     print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
     print("Example of the first wrapped sentence in dataset ", dataset[0])
 
-    checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
+    # checkpoint_file = tf.train.latest_checkpoint(FLAGS.checkpoint_dir)
+
+    training_file_number = 1523480613
+    out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
+    checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
+    meta_path = tf.train.latest_checkpoint(checkpoint_dir) + '.meta'
+
     graph = tf.Graph()
     with graph.as_default():
         session_conf = tf.ConfigProto(
@@ -98,8 +108,11 @@ def test():
         sess = tf.Session(config=session_conf)
         with sess.as_default():
             # Restore the model
-            saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
-            saver.restore(sess, checkpoint_file)
+            # removed: saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_file))
+            # removed: saver.restore(sess, checkpoint_file)
+            saver = tf.train.import_meta_graph(meta_path)
+            saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
+
 
             # Get placeholders from the graph
             input_x = graph.get_operation_by_name("input_x").outputs[0]
@@ -107,30 +120,51 @@ def test():
             init_state_current = graph.get_operation_by_name("init_state_current").outputs[0]
 
             # Evaluation
-            prediction = graph.get_operation_by_name("softmax_out_layer/predictions").outputs[0]
+            prediction = graph.get_operation_by_name("softmax_out/predictions").outputs[0]
 
             # Create batches for the test data, shuffle not needed
-            batches = train_utils.batch_iter(list(FLAGS.test_set), FLAGS.batch_size, 1, shuffle=False)
+            # batches = train_utils.batch_iter(list(FLAGS.test_set), FLAGS.batch_size, 1, shuffle=False)
+            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=1,
+                                             shuffle=False,
+                                             testing=False)
 
-            perplexities = []  # array with perplexities for each sentence
+            perplexities = [] # makes a LIST
+            # removed: perplexities = np.empty([1,1])  # array with perplexities for each sentence
 
             print("Evaluating...")
-            for i, batch in enumerate(batches):
+
+            i = 0
+
+            for batch in batches:
+
+                batch, y_batch = zip(*batch)
+                print(len(batch))
+
                 # TODO may need to put words_mapper_to_vocab_indices in data utils since it is used also for testing
                 x_batch = train_utils.words_mapper_to_vocab_indices(batch, utils.vocabulary_words_list)
 
                 feed_dict = {
                     input_x: x_batch,
-                    init_state_hidden: np.zeros(batch_size, lstm_cell_state),
-                    init_state_current: np.zeros(batch_size, lstm_cell_state)
+                    init_state_hidden: np.zeros([batch_size, lstm_cell_state]),
+                    init_state_current: np.zeros([batch_size, lstm_cell_state])
                 }
                 estimates = sess.run(prediction, feed_dict)
 
-                for j, sentence in enumerate(batch):
+                j = 0
+
+                for sentence in batch:
                     sentence_perplexity = perplexity(sentence, estimates[j], utils.vocabulary_words_list)
+                    print("j")
+                    print(j)
                     print("Sentence {} in batch {}: perplexity {}".format(j, i, sentence_perplexity))
-                    perplexities = np.concatenate([perplexities, sentence_perplexity])
+                    # removed: perplexities = np.concatenate(perplexities, [sentence_perplexity])
+                    perplexities = perplexities + [sentence_perplexity]
+
+                    j = j+1
+
+                i = i+1
 
     print("Check if perplexities and test set have the same size: ", len(perplexities) == dataset_size)
     write_perplexity(perplexities)
 
+test()

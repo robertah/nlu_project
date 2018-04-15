@@ -2,6 +2,8 @@
 File containing configuration variables used across the project
 """
 
+import os
+
 # number of the group for the project
 n_group = '20'
 
@@ -30,7 +32,7 @@ sentence_len = 30
 vocabulary_size = 20000
 embeddings_size = 100
 batch_size = 64
-test_batch_size = 1
+# test_batch_size = 1
 batches_per_epoch = 100
 num_epochs = 3
 lstm_cell_state = 512
@@ -38,8 +40,12 @@ lstm_cell_state_down = 512
 
 # checkpoint
 checkpoint_every = 100
-checkpoint_dir = "./runs/1521480984/checkpoints/"
+runs_dir = "/runs/"
+checkpoint_prefix = os.path.join(runs_dir, "model")
 evaluate_every = 100
+
+# data utils
+data_utils_pkl = 'data_utils.pkl'
 
 w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used

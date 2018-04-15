@@ -2,7 +2,7 @@
 from collections import Counter
 import numpy as np
 from gensim.models import word2vec
-
+import pickle
 
 class data_utils:
 
@@ -28,8 +28,10 @@ class data_utils:
     def check_for_unknown_words(self, sentence, nb_words):
 
         new_sentence=[]
+        vocabulary = self.vocabulary
+        print(vocabulary)
         for i in range(0, nb_words):
-            if sentence[i] in self.vocabulary:
+            if sentence[i] in vocabulary:
                 new_sentence.append(sentence[i])
             else:
                 new_sentence.append(self.unknown)
@@ -53,7 +55,7 @@ class data_utils:
             nb_words=len(sentence)
             padding_needed=0
 
-
+            """TODO: check if nb_words+2 or +1 is sufficient (count eos and bos ?)"""
             if nb_words+2<=self.max_nb_conc_words:
 
                 #needed padding in the sentence
@@ -61,7 +63,7 @@ class data_utils:
             
                 wrapped_sentence=[]
                 wrapped_sentence.append(self.sentence_beginning)
-                sentence=check_for_unknown_words(self, sentence, nb_words):
+                sentence=self.check_for_unknown_words(sentence, nb_words)
                 wrapped_sentence.extend(sentence)
 
                 self.wrapped_sentences.append(wrapped_sentence)
@@ -199,12 +201,14 @@ class data_utils:
 
 
 
-    def load_test_data(self,path_to_file):
+    def load_test_data(self,path_to_file, vocabulary_file_path):
 
         print("Loading test file...")
 
         with open(path_to_file) as f:
             content = f.readlines()
+
+        self.load_vocabulary(vocabulary_file_path)
 
         print("Starting the preprocessing..")
         # you may also want to remove whitespace characters like `\n` at the end of each line
@@ -212,7 +216,17 @@ class data_utils:
         self.wrapper_test_sentence_words()
         #self.do_sanity_checks()
 
-
         return self.wrapped_sentences
+
+
+    def load_vocabulary(self, pickle_filename):
+
+        with open(pickle_filename, 'rb') as handle:
+            self.vocabulary = pickle.load(handle)
+
+        print(list(self.vocabulary))
+
+        return self.vocabulary
+
 
 

@@ -1,5 +1,5 @@
 
-def nb_words_per_sentence(sentences_matrix, end_placeholder):
+def post_process_sentences(sentences, end_placeholder):
 
     """Input: matrix of sentences in charachter forms
        Requires: end placeholder in each sentence
@@ -15,3 +15,7 @@ def nb_words_per_sentence(sentences_matrix, end_placeholder):
                 break
 
     return nb_words
+
+def write_submission_predictions():
+
+    return 0

@@ -53,6 +53,9 @@ def main():
     is_predicting=True
     max_predicted_words=20
 
+    #TODO: change in vocabulary.pkl, it makes more sense to external people
+    vocabulary_file_path="data_utils.pkl"
+
     """ PARAMETERS INTO TENSORFLOW FLAGS
         -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
@@ -194,11 +197,9 @@ def main():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
-        def predicting_step(x_batch, state):
+        def predicting_step(word, state):
 
-            """x_batch in this case is represented by a single word"""
-            np.array(train_utils.words_mapper_to_vocab_indices(word, utils.vocabulary)).reshape(1,1)
-
+            """The input in this case is represented by a single word"""
 
             feed_dict = { 
                          lstm_network.input_x: word,
@@ -206,17 +207,18 @@ def main():
                          init_state_current: state[1]
                         }
 
-                    word_predicted, next_final_state = sess.run([lstm_network.vocab_indices_predictions, lstm_network.final_lstm_state], feed_dict)
+            word_predicted, next_final_state = sess.run([lstm_network.vocab_indices_predictions, lstm_network.final_lstm_state], feed_dict)
                     
-                    """Word indices in vocabulary -> charachter words"""
-                    word_predicted = np.array(word_predicted).reshape((1,1))
+            """Word indices in vocabulary -> charachter words"""
+            word_predicted = np.array(word_predicted).reshape((1,1))
 
-                    #print(train_utils.words_mapper_from_vocab_indices(word_predicted, utils.vocabulary))
+            #print(train_utils.words_mapper_from_vocab_indices(word_predicted, utils.vocabulary))
 
-                    """Update state in the lstm, which is the contextual memory"""
-                    next_hidden_state,next_current_state = next_final_state
-                    state = (next_hidden_state,next_current_state)
-                    #print(next_hidden_state)
+            """Update state in the lstm, which is the contextual memory"""
+            next_hidden_state,next_current_state = next_final_state
+            state = (next_hidden_state,next_current_state)
+            #print(next_hidden_state)
+            
             return word_predicted, state
 
         def dev_step(x_batch, y_batch, writer=None):
@@ -235,10 +237,6 @@ def main():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)
-
-
-
-
 
 
 
@@ -316,8 +314,6 @@ def main():
             down_project=down_project
         )
 
-        print("HERE")
-        #/home/francesco/Scrivania/NLU_project/nlu_project/task1/runs/1523793507/checkpoints/model-100
         checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523796690/checkpoints"))
         with tf.Session() as sess:
 
@@ -341,12 +337,17 @@ def main():
             print("YESSSSSS")
 
             """Load test data"""
-            utils = data_utilities.data_utils(model_to_load, embeddings_size, 20, vocabulary_size, bos,
+            utils = data_utilities.data_utils(model_to_load, embeddings_size, max_predicted_words, vocabulary_size, bos,
                                               eos, pad, unk)
-            not_used, dataset = utils.load_test_data(cont_set)
+            
+            not_used, dataset = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_file_path)
+
+            vocabulary = utils.vocabulary
+
             dataset_size = len(dataset)
 
             complete_sentences = []
+
         
             """Zero state feeded initially for each sentence"""
             for sentence in dataset:
@@ -359,51 +360,38 @@ def main():
                 full_sentence=[]
 
                 for word in sentence:
-                  
-                  word_predicted, lstm_state = predicting_step(word, lstm_state)
-                  #TODO: add if <eos> stop -> please note that it is not essential because of later postprocessing
-                  full_sentence.append(train_utils.words_mapper_from_vocab_indices(word_predicted, utils.vocabulary))
+
+                    word = np.array(train_utils.words_mapper_to_vocab_indices(word, utils.vocabulary)).reshape(1,1)     
+                    word_predicted, lstm_state = predicting_step(word, lstm_state)
+
+                    mapped_word = train_utils.words_mapper_from_vocab_indices(word_predicted, vocabulary)
+                    full_sentence.append(mapped_word)
+                    print(mapped_word)
+                    
+                    if mapped_word == eos:
+                        break
 
                 """Futher predictions done through the last predicted word of lstm and the current lstm state"""
                 words_remaining = max_predicted_words - nb_initial_words + 1
+                if full_sentence[-1] != eos:
+                    
+                    for i in range(words_remaining):
 
-                for i in range(words_remaining):
+                        last_word_predicted = full_sentence[-1]
+                        last_word_predicted = np.array(train_utils.words_mapper_to_vocab_indices(last_word_predicted, utils.vocabulary)).reshape(1,1)     
 
-                    last_word_predicted = full_sentence[-1]
-                    word_predicted, lstm_state = predicting_step(last_word_predicted, lstm_state)
-                    #TODO: add if <eos> stop -> please note that it is not essential because of later postprocessing
-                    full_sentence.append(train_utils.words_mapper_from_vocab_indices(word_predicted, utils.vocabulary))
+                        word_predicted, lstm_state = predicting_step(last_word_predicted, lstm_state)
+                        mapped_word = train_utils.words_mapper_from_vocab_indices(word_predicted, vocabulary)
+                        full_sentence.append(mapped_word)
+                        print("Predicting from lstm prediction ",mapped_word)
+                        if mapped_word == eos:
+                            
+                            break
 
-               
+                complete_sentences.append(full_sentence)
 
+            """Write predictions to submission file"""
 
-
-        """Preprocess data, it is done the same way as in train data (max words = 30), but at running time the cycle
-            will end before and if <pad> or <eos> are read by the network, then the last predicted word will be used as new input
-            for predictions"""
-        print("DONE")
-
-
-        print("Total sentences in the dataset: ", dataset_size)
-        print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
-        print("Example of the first wrapped sentence in dataset ", dataset[0])
-        
-        """TODO: task 2 to implement"""
-        batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
-                                                 testing=False)
-        i=1
-        for batch in batches:
-
-            x_batch, y_batch = zip(*batch)
-
-            x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
-            y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, utils.vocabulary_words_list)
-
-            """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
-            predicting_step(x_batch=x_batch, y_batch=y_batch)
-
-            print("Sentences predicted so far ",i*batch_size)
-            i=i+1
 
 
 main()

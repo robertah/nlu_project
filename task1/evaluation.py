@@ -30,7 +30,7 @@ def perplexity(sentence, estimate, vocabulary):
         i += 1
     # compute the perplexity
     sentence_perplexity = np.power(2, -1 * (np.log2(probs)).mean())
-    print(sentence_perplexity)
+
     return sentence_perplexity
 
 

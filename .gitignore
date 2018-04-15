@@ -104,3 +104,4 @@ ENV/
 pos-tagger/*
 pos-tagger-official-solution/*
 data/*
+task1/runs/*

@@ -2,6 +2,8 @@
 File containing configuration variables used across the project
 """
 
+import os
+
 # number of the group for the project
 n_group = '20'
 
@@ -38,10 +40,12 @@ lstm_cell_state_down = 512
 
 # checkpoint
 checkpoint_every = 100
-checkpoint_dir = "./runs/1521480984/checkpoints/"
+runs_dir = "/runs/"
+checkpoint_prefix = os.path.join(runs_dir, "model")
 evaluate_every = 100
 
-max_global_steps = 4500
+# saved vocabulary
+vocabulary_pkl = 'vocabulary.pkl'
 
 w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used

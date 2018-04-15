@@ -9,13 +9,12 @@ import model_lstm2
 import os
 import numpy as np
 import training_utils as train_utils
+import testing_utils as testing_utils
 import load_embeddings as load_embeddings
-import sys
 
 """Upgrade to TensorFlow 1.7 to include updates for eager execution:
 $ pip install --upgrade tensorflow
 Eager execution tensorflow to enable the recurrent computaton in the lstm"""
-
 
 """Resources used for implementation
    https://becominghuman.ai/understanding-tensorflow-source-code-rnn-cells-55464036fc07 
@@ -47,14 +46,16 @@ def main():
     """load configs & data -> preprocessing"""
 
     if lstm_cell_state > lstm_cell_state_down:
-        down_project=True
+        down_project = True
     else:
-        down_project=False
+        down_project = False
+    is_predicting = True
+    max_predicted_words = 20
 
     """ PARAMETERS INTO TENSORFLOW FLAGS
         -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
-    
+
     """TODO: make order with all this , decide if to delete or to keep"""
 
     # tf.flags.DEFINE_float("dev_sample_percentage", .1,
@@ -71,8 +72,8 @@ def main():
                             "Evaluate model on dev set after this many steps (default: 100)")
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
     tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
-    tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the last lstm cell")
-    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the last lstm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the lastm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lastm cell")
 
     # Tensorflow Parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -83,8 +84,6 @@ def main():
                             "TF nodes that perform blocking operations are enqueued on a pool of inter_op_parallelism_threads available in each process (default 0).")
     tf.flags.DEFINE_integer("intra_op_parallelism_threads", 0,
                             "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
-
-
 
     """Printing model configuration to command line"""
 
@@ -174,23 +173,50 @@ def main():
             }
             _, step, summaries, loss, accuracy, new_hidden_state, new_current_state, vocab_idx_predictions = sess.run(
                 [train_optimizer, global_step, train_summary_op, lstm_network.loss,
-                 lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current, lstm_network.vocab_indices_predictions],
+                 lstm_network.accuracy, lstm_network.init_state_hidden, lstm_network.init_state_current,
+                 lstm_network.vocab_indices_predictions],
                 feed_dict)
 
-
-            # print("Predictions indices w.r.t vocabulary")
-            # print(vocab_idx_predictions)
-            # print("Example of sentence predicted by the network by training")
-            # print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list, is_tuple = True)[0:29])
-            # print("Groundtruth for the sentence predicted by the network above")
-            # print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch,[batch_size*30]), utils.vocabulary_words_list)[0:29])
+            print("Predictions indices w.r.t vocabulary")
+            print(vocab_idx_predictions)
+            print("Example of sentence predicted by the network by training")
+            print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list,
+                                                              is_tuple=True)[0:29])
+            print("Groundtruth for the sentence predicted by the network above")
+            print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch, [batch_size * 30]),
+                                                              utils.vocabulary_words_list)[0:29])
 
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
 
             time_str = datetime.datetime.now().isoformat()
-            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
+
+        def predicting_step(word, state):
+
+            """The input in this case is represented by a single word"""
+
+            feed_dict = {
+                lstm_network.input_x: word,
+                init_state_hidden: state[0],
+                init_state_current: state[1]
+            }
+
+            word_predicted, next_final_state = sess.run(
+                [lstm_network.vocab_indices_predictions, lstm_network.final_lstm_state], feed_dict)
+
+            """Word indices in vocabulary -> charachter words"""
+            word_predicted = np.array(word_predicted).reshape((1, 1))
+
+            # print(train_utils.words_mapper_from_vocab_indices(word_predicted, utils.vocabulary))
+
+            """Update state in the lstm, which is the contextual memory"""
+            next_hidden_state, next_current_state = next_final_state
+            state = (next_hidden_state, next_current_state)
+            # print(next_hidden_state)
+
+            return word_predicted, state
 
         def dev_step(x_batch, y_batch, writer=None):
             """
@@ -205,86 +231,168 @@ def main():
                 [global_step, dev_summary_op, lstm_network.loss, lstm_network.accuracy],
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)
 
-        """Create model and preprocess data"""
+    if lstm_is_training:
 
+        """Preprocess data"""
         utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
                                           eos, pad, unk)
 
-        model_w2v, dataset = utils.load_data(train_set)
+        model_w2v, dataset = utils.load_train_data(train_set)
         dataset_size = len(dataset)
-        
-        # print("Total sentences in the dataset: ", dataset_size)
-        # print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
-        # print("Example of the first wrapped sentence in dataset ", dataset[0])
 
-        if lstm_is_training:
-            """The network is training"""
+        print("Total sentences in the dataset: ", dataset_size)
+        print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
+        print("Example of the first wrapped sentence in dataset ", dataset[0])
 
-            if training_with_w2v:
+        if training_with_w2v:
+            Total_IDs = len(utils.vocabulary_words_list)
 
+            vocab_and_IDs = dict(zip(utils.vocabulary_words_list, [idx for idx in range(Total_IDs)]))
 
-                Total_IDs = len(utils.vocabulary_words_list)
+            load_embeddings.load_embedding(session=sess, vocab=vocab_and_IDs, emb=lstm_network.W_embedding,
+                                           path=data_folder + "/" + embeddings, dim_embedding=embeddings_size,
+                                           vocab_size=Total_IDs)
 
-                vocab_and_IDs = dict(zip(utils.vocabulary_words_list,[idx for idx in range(Total_IDs)]))
+        """batches is a generator, please refer to training_utilities for more information.
+           batch_iter function is executed if an iteration is performed on op of it and it
+           gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
+        batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
+                                         testing=False)
 
-                load_embeddings.load_embedding(session = sess, vocab = vocab_and_IDs, emb = lstm_network.W_embedding, path=data_folder+"/"+embeddings, dim_embedding=embeddings_size, vocab_size=Total_IDs)
+        for batch in batches:
 
-            """batches is a generator, please refer to training_utilities for more information.
-               batch_iter function is executed if an iteration is performed on op of it and it
-               gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
-            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=shuffle_training,
-                                                 testing=False)
+            x_batch, y_batch = zip(*batch)
 
-            for batch in batches:
+            x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
+            y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, utils.vocabulary_words_list)
 
-                x_batch, y_batch = zip(*batch)
+            """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
+            train_step(x_batch=x_batch, y_batch=y_batch)
+            current_step = tf.train.global_step(sess, global_step)
 
-                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
-                y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, utils.vocabulary_words_list)
+            """Decomment and implement if neeeded"""
+            # if current_step % FLAGS.evaluate_every == 0:
+            #    print("\nEvaluation:")
+            #    dev_step(x_dev, y_dev, writer=dev_summary_writer)
+            #    print("")
+            #    needed for perplexity calculation
+            if current_step % FLAGS.checkpoint_every == 0:
+                path = saver.save(sess, checkpoint_prefix, global_step=current_step)
+                print("Saved model checkpoint to {}\n".format(path))
 
-                """Train batch is used as evaluation batch as well -> it will be compared with predictions"""
-                train_step(x_batch=x_batch, y_batch=y_batch)
-                current_step = tf.train.global_step(sess, global_step)
+    else:
 
-                """Decomment and implement if neeeded"""
-                # if current_step % FLAGS.evaluate_every == 0:
-                #    print("\nEvaluation:")
-                #    dev_step(x_dev, y_dev, writer=dev_summary_writer)
-                #    print("")
-                #    needed for perplexity calculation
-                if current_step % FLAGS.checkpoint_every == 0:
-                    path = saver.save(sess, checkpoint_prefix, global_step=current_step)
-                    print("Saved model checkpoint to {}\n".format(path))
+        """The network is doing predictions"""
+        """Restore model for predictions"""
 
-                if global_step == max_global_steps:
-                    sys.exit()
+        # TODO: move variable in config and pu those in place of numbers below
+        # batch_size=1
+        # words_in_sentence=1
 
+        lstm_network = model_lstm2.lstm_model(
+            vocab_size=FLAGS.vocabulary_size,
+            embedding_size=FLAGS.embeddings_size,
+            words_in_sentence=1,
+            batch_size=1,
+            lstm_cell_size=lstm_cell_state,
+            lstm_cell_size_down=lstm_cell_state_down,
+            down_project=down_project
+        )
 
+        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523815045/checkpoints"))
+        with tf.Session() as sess:
 
-        else:
-            """The network is doing predictions"""
+            sess.run(tf.global_variables_initializer())
+            saver = tf.train.Saver(max_to_keep=5)
+            # saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-100.meta')
+            saver.restore(sess,
+                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523815045/checkpoints/")))
 
-            """TODO: task 2 to implement"""
-            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
-                                             testing=False)
+            input_x = tf.get_default_graph().get_tensor_by_name("input_x:0")
 
-            for batch in batches:
+            print(input_x)
 
-                x_batch, y_batch = zip(*batch)
-                train_step(x_batch, y_batch)
-                current_step = tf.train.global_step(sess, global_step)
+            init_state_current = tf.get_default_graph().get_tensor_by_name("init_state_current:0")
+            print(init_state_current)
+            init_state_hidden = tf.get_default_graph().get_tensor_by_name("init_state_hidden:0")
+            vocab_indices_predictions = tf.get_default_graph().get_tensor_by_name("vocab_indices_predictions:0")
+            print(vocab_indices_predictions)
+            print(tf.get_collection(tf.GraphKeys.TRAINABLE_VARIABLES, 'softmax_out_layer'))
+            # arr=a.split(" ")
+            print("YESSSSSS")
 
-                if current_step % FLAGS.evaluate_every == 0:
-                    print("\nEvaluation:")
-                    dev_step(x_dev, y_dev, writer=dev_summary_writer)
-                    print("")
-                if current_step % FLAGS.checkpoint_every == 0:
-                    path = saver.save(sess, checkpoint_prefix, global_step=current_step)
-                    print("Saved model checkpoint to {}\n".format(path))
+            """Load test data"""
+            utils = data_utilities.data_utils(model_to_load, embeddings_size, max_predicted_words, vocabulary_size, bos,
+                                              eos, pad, unk)
+
+            dataset = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_pkl)
+            print(len(dataset))
+            # dataset=dataset[0:50]  uncomment for testing and have results in the brief time
+            dataset_size = len(dataset)
+
+            complete_sentences = []
+
+            sentence_nb = 0
+
+            """Zero state feeded initially for each sentence"""
+            for sentence in dataset:
+
+                nb_initial_words = len(sentence)
+
+                initial_lstm_state = (np.zeros((1, lstm_cell_state)),) * 2
+
+                lstm_state = initial_lstm_state
+                full_sentence = []
+
+                for word in sentence:
+
+                    word = np.array(utils.vocabulary_words_list.index(word)).reshape(1, 1)
+                    word_predicted, lstm_state = predicting_step(word, lstm_state)
+                    # print("Word predicted is ",word_predicted[0][0])
+                    mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
+                    # print("NOT predicting from lstm prediction ",mapped_word)
+                    full_sentence.append(mapped_word)
+                    print(mapped_word)
+
+                    if mapped_word == eos:
+                        break
+
+                """Futher predictions done through the last predicted word of lstm and the current lstm state"""
+                words_remaining = max_predicted_words - nb_initial_words
+                states = []
+                if full_sentence[-1] != eos:
+
+                    for i in range(words_remaining):
+
+                        last_word_predicted = full_sentence[-1]
+                        # print(full_sentence[-1])
+                        last_word_predicted = np.array(utils.vocabulary_words_list.index(last_word_predicted)).reshape(
+                            1, 1)
+
+                        word_predicted, lstm_new_state = predicting_step(last_word_predicted, lstm_state)
+                        # TODO: check the state of the lstm changes over time (memory) -> not sure .> test with exhaustively trained model
+                        # if(lstm_new_state==lstm_state):
+                        #    print("something wrong")
+                        # states.append(lstm_new_state)
+                        # state_0=state[0]
+                        # for stat
+
+                        lstm_state = lstm_new_state
+                        mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
+                        full_sentence.append(mapped_word)
+                        # print("Predicting from lstm prediction ",mapped_word, " word ", i)
+                        if mapped_word == eos:
+                            break
+
+                sentence_nb = sentence_nb + 1
+                complete_sentences.append(full_sentence)
+                print("Completed sentence number ", sentence_nb)
+            """Write predictions to submission file"""
+            testing_utils.write_submission_predictions(complete_sentences, bos, eos, n_group)
 
 
 main()

@@ -10,6 +10,7 @@ import os
 import numpy as np
 import training_utils as train_utils
 import load_embeddings as load_embeddings
+import sys
 
 """Upgrade to TensorFlow 1.7 to include updates for eager execution:
 $ pip install --upgrade tensorflow
@@ -70,8 +71,8 @@ def main():
                             "Evaluate model on dev set after this many steps (default: 100)")
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
     tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
-    tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the lastm cell")
-    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lastm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the last lstm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the last lstm cell")
 
     # Tensorflow Parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -153,7 +154,7 @@ def main():
 
         """ Initialize all variables """
         sess.run(tf.global_variables_initializer())
-        #sess.graph.finalize()
+        # sess.graph.finalize()
 
         """All the training procedure below"""
         lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
@@ -177,18 +178,18 @@ def main():
                 feed_dict)
 
 
-            print("Predictions indices w.r.t vocabulary")
-            print(vocab_idx_predictions)
-            print("Example of sentence predicted by the network by training")
-            print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list, is_tuple = True)[0:29])
-            print("Groundtruth for the sentence predicted by the network above")
-            print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch,[batch_size*30]), utils.vocabulary_words_list)[0:29])
+            # print("Predictions indices w.r.t vocabulary")
+            # print(vocab_idx_predictions)
+            # print("Example of sentence predicted by the network by training")
+            # print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list, is_tuple = True)[0:29])
+            # print("Groundtruth for the sentence predicted by the network above")
+            # print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch,[batch_size*30]), utils.vocabulary_words_list)[0:29])
 
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
 
             time_str = datetime.datetime.now().isoformat()
-            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
         def dev_step(x_batch, y_batch, writer=None):
@@ -204,13 +205,9 @@ def main():
                 [global_step, dev_summary_op, lstm_network.loss, lstm_network.accuracy],
                 feed_dict)
             time_str = datetime.datetime.now().isoformat()
-            print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
+            # print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             if writer:
                 writer.add_summary(summaries, step)
-
-
-
-
 
         """Create model and preprocess data"""
 
@@ -220,9 +217,9 @@ def main():
         model_w2v, dataset = utils.load_data(train_set)
         dataset_size = len(dataset)
         
-        print("Total sentences in the dataset: ", dataset_size)
-        print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
-        print("Example of the first wrapped sentence in dataset ", dataset[0])
+        # print("Total sentences in the dataset: ", dataset_size)
+        # print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
+        # print("Example of the first wrapped sentence in dataset ", dataset[0])
 
         if lstm_is_training:
             """The network is training"""
@@ -236,11 +233,10 @@ def main():
 
                 load_embeddings.load_embedding(session = sess, vocab = vocab_and_IDs, emb = lstm_network.W_embedding, path=data_folder+"/"+embeddings, dim_embedding=embeddings_size, vocab_size=Total_IDs)
 
-
             """batches is a generator, please refer to training_utilities for more information.
                batch_iter function is executed if an iteration is performed on op of it and it
                gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
-            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
+            batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=shuffle_training,
                                                  testing=False)
 
             for batch in batches:
@@ -250,7 +246,7 @@ def main():
                 x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
                 y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, utils.vocabulary_words_list)
 
-                """Train batch is used as evaluation batch as well -> it will be compared with predicitons"""
+                """Train batch is used as evaluation batch as well -> it will be compared with predictions"""
                 train_step(x_batch=x_batch, y_batch=y_batch)
                 current_step = tf.train.global_step(sess, global_step)
 
@@ -263,6 +259,11 @@ def main():
                 if current_step % FLAGS.checkpoint_every == 0:
                     path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                     print("Saved model checkpoint to {}\n".format(path))
+
+                if global_step == max_global_steps:
+                    sys.exit()
+
+
 
         else:
             """The network is doing predictions"""

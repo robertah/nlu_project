@@ -44,8 +44,8 @@ runs_dir = "/runs/"
 checkpoint_prefix = os.path.join(runs_dir, "model")
 evaluate_every = 100
 
-# data utils
-data_utils_pkl = 'data_utils.pkl'
+# saved vocabulary
+vocabulary_pkl = 'vocabulary.pkl'
 
 w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used

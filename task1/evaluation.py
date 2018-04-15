@@ -3,7 +3,8 @@ import numpy as np
 import tensorflow as tf
 import training_utils as train_utils
 import os
-import pickle
+import data_utilities
+
 
 def perplexity(sentence, estimate, vocabulary):
     """
@@ -78,17 +79,18 @@ def test():
 
     # TODO (best practice) it may be better to remove the class for data utils and keep the methods
 
-    with open(data_utils_pkl, 'rb') as input:
-        utils = pickle.load(input)
-
-    dataset = utils.load_test_set(FLAGS.test_set)
+    dataset, vocabulary_words_list = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len,
+                                                               vocabulary_size, bos,
+                                                               eos, pad, unk).load_test_data(FLAGS.test_set,
+                                                                                             vocabulary_pkl)
     dataset_size = len(dataset)
     print(dataset_size)
+    print(len(vocabulary_words_list))
 
     out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs"))
     all_runs = [os.path.join(out_dir, o) for o in os.listdir(out_dir)
                 if os.path.isdir(os.path.join(out_dir, o))]
-    latest_run = max(all_runs, key=os.path.getmtime) # get the latest run
+    latest_run = max(all_runs, key=os.path.getmtime)  # get the latest run
     checkpoint_dir = os.path.abspath(os.path.join(latest_run, "checkpoints"))
 
     checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
@@ -120,7 +122,7 @@ def test():
             for i, batch in enumerate(batches):
                 # TODO may need to put words_mapper_to_vocab_indices in data utils since it is used also for testing
                 x_batch, _ = zip(*batch)
-                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, utils.vocabulary_words_list)
+                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, vocabulary_words_list)
 
                 feed_dict = {
                     input_x: x_batch,
@@ -132,7 +134,7 @@ def test():
                 estimates = np.reshape(estimates, [-1, sentence_len, vocabulary_size])
 
                 for j, sentence in enumerate(x_batch):
-                    sentence_perplexity = perplexity(sentence, estimates[j], utils.vocabulary_words_list)
+                    sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
                     print("Sentence {} in batch {}: perplexity {}".format(j, i, sentence_perplexity))
                     perplexities.append(sentence_perplexity)
 

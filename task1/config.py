@@ -47,6 +47,9 @@ evaluate_every = 100
 # saved vocabulary
 vocabulary_pkl = 'vocabulary.pkl'
 
+# max number of steps during training
+max_global_steps = 4500
+
 w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used
 w2v_dataset_name = "wordembeddings-dim100.word2vec"  # TODO not used

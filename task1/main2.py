@@ -7,6 +7,7 @@ from config import *
 import data_utilities
 import model_lstm2
 import os
+import sys
 import numpy as np
 import training_utils as train_utils
 import testing_utils as testing_utils
@@ -283,6 +284,9 @@ def main():
             if current_step % FLAGS.checkpoint_every == 0:
                 path = saver.save(sess, checkpoint_prefix, global_step=current_step)
                 print("Saved model checkpoint to {}\n".format(path))
+
+            if global_step == max_global_steps:
+                sys.exit()
 
     else:
 

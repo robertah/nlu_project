@@ -54,7 +54,7 @@ def main():
     max_predicted_words=20
 
     #TODO: change in vocabulary.pkl, it makes more sense to external people
-    vocabulary_file_path="data_utils.pkl"
+    vocabulary_file_path="vocabulary.pkl"
 
     """ PARAMETERS INTO TENSORFLOW FLAGS
         -> the advantage : Variables can be accessed from a tensorflow object without 
@@ -314,13 +314,13 @@ def main():
             down_project=down_project
         )
 
-        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523796690/checkpoints"))
+        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523815045/checkpoints"))
         with tf.Session() as sess:
 
             sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver(max_to_keep=5)
             #saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-100.meta')
-            saver.restore(sess,tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523796690/checkpoints/")))
+            saver.restore(sess,tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523815045/checkpoints/")))
 
 
             input_x=tf.get_default_graph().get_tensor_by_name("input_x:0")
@@ -340,15 +340,15 @@ def main():
             utils = data_utilities.data_utils(model_to_load, embeddings_size, max_predicted_words, vocabulary_size, bos,
                                               eos, pad, unk)
             
-            not_used, dataset = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_file_path)
-
-            vocabulary = utils.vocabulary
-
+            dataset = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_file_path)
+            print(len(dataset))
+            #dataset=dataset[0:50]  uncomment for testing and have results in the brief time
             dataset_size = len(dataset)
 
             complete_sentences = []
 
-        
+            sentence_nb=0
+
             """Zero state feeded initially for each sentence"""
             for sentence in dataset:
 
@@ -361,10 +361,11 @@ def main():
 
                 for word in sentence:
 
-                    word = np.array(train_utils.words_mapper_to_vocab_indices(word, utils.vocabulary)).reshape(1,1)     
+                    word = np.array(utils.vocabulary_words_list.index(word)).reshape(1,1)     
                     word_predicted, lstm_state = predicting_step(word, lstm_state)
-
-                    mapped_word = train_utils.words_mapper_from_vocab_indices(word_predicted, vocabulary)
+                    #print("Word predicted is ",word_predicted[0][0])
+                    mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
+                    #print("NOT predicting from lstm prediction ",mapped_word)
                     full_sentence.append(mapped_word)
                     print(mapped_word)
                     
@@ -372,25 +373,39 @@ def main():
                         break
 
                 """Futher predictions done through the last predicted word of lstm and the current lstm state"""
-                words_remaining = max_predicted_words - nb_initial_words + 1
+                words_remaining = max_predicted_words - nb_initial_words
+                states=[]
                 if full_sentence[-1] != eos:
                     
                     for i in range(words_remaining):
 
                         last_word_predicted = full_sentence[-1]
-                        last_word_predicted = np.array(train_utils.words_mapper_to_vocab_indices(last_word_predicted, utils.vocabulary)).reshape(1,1)     
+                        #print(full_sentence[-1])
+                        last_word_predicted = np.array(utils.vocabulary_words_list.index(last_word_predicted)).reshape(1,1)     
 
-                        word_predicted, lstm_state = predicting_step(last_word_predicted, lstm_state)
-                        mapped_word = train_utils.words_mapper_from_vocab_indices(word_predicted, vocabulary)
+                        word_predicted, lstm_new_state = predicting_step(last_word_predicted, lstm_state)
+                        #TODO: check the state of the lstm changes over time (memory) -> not sure .> test with exhaustively trained model
+                        #if(lstm_new_state==lstm_state):
+                        #    print("something wrong")
+                        #states.append(lstm_new_state)
+                        #state_0=state[0]
+                        #for stat
+
+
+
+                        lstm_state=lstm_new_state
+                        mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
                         full_sentence.append(mapped_word)
-                        print("Predicting from lstm prediction ",mapped_word)
+                        #print("Predicting from lstm prediction ",mapped_word, " word ", i)
                         if mapped_word == eos:
                             
                             break
 
+                sentence_nb=sentence_nb+1
                 complete_sentences.append(full_sentence)
-
+                print("Completed sentence number ",sentence_nb)
             """Write predictions to submission file"""
+            testing_utils.write_submission_predictions(complete_sentences, bos, eos, n_group)
 
 
 

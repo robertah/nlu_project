@@ -82,7 +82,7 @@ def words_mapper_from_vocab_indices(indices_predictions, vocabulary_words_list, 
 
     #for idx_sentence in range(0,nb_sentences):
     words_of_sentences=[]
-
+    
     for idx_word in range(nb_words_vocabulary_indices):
 
             words_of_sentences.append(vocabulary_words_list[indices_predictions[idx_word]])

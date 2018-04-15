@@ -29,7 +29,7 @@ class data_utils:
 
         new_sentence=[]
         vocabulary = self.vocabulary
-        print(vocabulary)
+
         for i in range(0, nb_words):
             if sentence[i] in vocabulary:
                 new_sentence.append(sentence[i])
@@ -162,6 +162,7 @@ class data_utils:
         total_dictionary = Counter(self.tokenized_sentences)
 
         self.vocabulary=total_dictionary
+        print("Dictionary has been defined")
 
 
 
@@ -197,6 +198,11 @@ class data_utils:
         #self.do_sanity_checks()
         self.word_2_vec()
 
+        with open("vocabulary.pkl", 'wb') as output:
+            pickle.dump(self.vocabulary, output, pickle.HIGHEST_PROTOCOL)
+            print("Data utils saved as pkl")
+
+
         return self.model_w2v, self.wrapped_sentences
 
 
@@ -223,8 +229,8 @@ class data_utils:
 
         with open(pickle_filename, 'rb') as handle:
             self.vocabulary = pickle.load(handle)
-
-        print(list(self.vocabulary))
+        self.vocabulary_words_list = list(self.vocabulary.keys())
+        #print(list(self.vocabulary))
 
         return self.vocabulary
 

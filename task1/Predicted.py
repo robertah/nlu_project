@@ -37,6 +37,18 @@ def load_sentence_beginning(filename):
     return dataset
 
 
+def write_prediction(predictions):
+    """
+    Write predictions on file
+    :parameter predictions: predicted continuation of sentences
+    """
+
+    output_file = "{}/group{}.prediction{}".format(output_folder, n_group, experiment)
+
+    with open(output_file, "w") as f:
+        for p in predictions:
+            f.write("{}\n".format(p))
+
 
     """Task 2 - Mel's Try"""
 
@@ -49,7 +61,11 @@ def load_sentence_beginning(filename):
 def predicting_end_of_sentences(training_file_number):
     """Loading sentence beginnings and continuing sentences up to <eos> tag or max length"""
 
-    dataset = load_sentence_beginning(cont_set)
+    utils = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len, vocabulary_size, bos,
+                                      eos, pad, unk)
+
+    begin_sentences = load_sentence_beginning(cont_set)
+    beginning_sentence = train_utils.words_mapper_to_vocab_indices(begin_sentences, utils.vocabulary_words_list)
 
     # Restoring Session
     tf.reset_default_graph()
@@ -69,56 +85,49 @@ def predicting_end_of_sentences(training_file_number):
         for op in graph.get_operations():
             print(op.name)
 
-        W_embedding = graph.get_tensor_by_name("embedding_layer/W_embedding:0")
-        print("W_embedding : %s" % W_embedding.eval())
+        W_soft = graph.get_tensor_by_name("softmax_out/W_soft:0")
+        b_soft = graph.get_tensor_by_name("softmax_out/b_soft:0")
+        input_x = graph.get_operation_by_name("input_x").outputs[0]
+        init_state_hidden = graph.get_operation_by_name("init_state_hidden").outputs[0]
+        init_state_current = graph.get_operation_by_name("init_state_current").outputs[0]
+        predictions = graph.get_operation_by_name("softmax_out/predictions").outputs[0]
 
-        #get index of next word with highest probability
-        prediction = graph.get_operation_by_name("softmax_out_layer/predictions").outputs[0]
+        state = None
 
-        sentence_len = 30
+        sentence_continuation= []
 
-        sentence_endings = np.zeros((1, sentence_len, vocabulary_size))
+        for i in range(sentence_len):
 
-        for i in range(length):
-    # 1) get all words of sentence beginning
-    # predict based on those
-    # 2) predict next word  after m+1
-    #
-
-
-
-
-
-"""Not sure I need this....
-
-    w2v_model_filename = "w2v_model"
-    dataset_filename = "input_data"
-    w2v_dataset_name = "wordembeddings-dim100.word2vec"
-    model_to_load = True
-    lstm_is_training = False
-    num_epochs = 3
-    checkpoint_every = 100
-    evaluate_every = 100
-    lstm_cell_state = 512
-    lstm_cell_state_down = 512
-    training_with_w2v = False
-
-
-    tf.flags.DEFINE_string("train_set", train_set, "Path to the training data")
+            if state:
+                feed_dict = {
+                    input_x: current_word,
+                    init_state_hidden: new_hidden_state,
+                    init_state_current: new_current_state}
+            else:
+                feed_dict = {
+                    input_x: beginning_sentence,
+                    init_state_hidden: np.zeros([batch_size, lstm_cell_state]),
+                    init_state_current: np.zeros([batch_size, lstm_cell_state])
+                }
 
 
 
-    # # Tensorflow Parameters
-    # tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
-    # tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
+            new_hidden_state, new_current_state, vocab_idx_predictions = sess.run(
+                [init_state_hidden, init_state_current,
+                predictions],
+                feed_dict)
 
+            current_word = words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list)
+            sentence_continuation.append(current_word)
 
-"""
+            state = True
+
+    return separator.join(word for word in sentence_continuation)
+
 
 def main():
     training_file_number = 1523480613
     sentences = load_sentence_beginning(cont_set)
     predicting_end_of_sentences(training_file_number)
-    print(sentences)
 
 main()

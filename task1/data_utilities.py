@@ -36,12 +36,45 @@ class data_utils:
 
         return new_sentence
 
-    def wrapper_sentence_words(self):
+    def wrapper_test_sentence_words(self):
 
         """Use a special sentence-beginning symbol <bos> and a sentence-end symbol <eos>
         (please use exactly these, including brackets).  The <bos> symbol is the input, 
         when predicting the first word and the <eos> symbol you require your model 
-        to predict at the end of every sentence. Finally use <"""
+        to predict at the end of every sentence."""
+
+        print("Starting to wrap the sentences appropriately..")
+        self.wrapped_sentences=[]
+
+        total_unknown=0
+
+        for sentence in self.tokens_per_sentence:
+            
+            nb_words=len(sentence)
+            padding_needed=0
+
+
+            if nb_words+2<=self.max_nb_conc_words:
+
+                #needed padding in the sentence
+                padding_needed=self.max_nb_conc_words-nb_words-2
+            
+                wrapped_sentence=[]
+                wrapped_sentence.append(self.sentence_beginning)
+                sentence=check_for_unknown_words(self, sentence, nb_words):
+                wrapped_sentence.extend(sentence)
+
+                self.wrapped_sentences.append(wrapped_sentence)
+                #print(wrapped_sentence)
+                
+        print("Finished preprocessing test sentences")
+
+    def wrapper_train_sentence_words(self):
+
+        """Use a special sentence-beginning symbol <bos> and a sentence-end symbol <eos>
+        (please use exactly these, including brackets).  The <bos> symbol is the input, 
+        when predicting the first word and the <eos> symbol you require your model 
+        to predict at the end of every sentence. Finally use <ukn> for words not in the vocabulary"""
 
         print("Starting to wrap the sentences appropriately..")
         self.wrapped_sentences=[]
@@ -146,9 +179,9 @@ class data_utils:
         self.tokens_per_sentence=tokens_per_sentence
         print("Strings have been tokenized...")
 
-    def load_data(self,path_to_file):
+    def load_train_data(self,path_to_file):
 
-        print("Loading file...")
+        print("Loading train file...")
 
         with open(path_to_file) as f:
             content = f.readlines()
@@ -158,33 +191,28 @@ class data_utils:
         self.string_tokenizer([x.strip("\n") for x in content])
         self.define_dictionary()
         self.reduce_dictionary()
-        self.wrapper_sentence_words()
+        self.wrapper_train_sentence_words()
         #self.do_sanity_checks()
         self.word_2_vec()
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         return self.model_w2v, self.wrapped_sentences
+
+
+
+    def load_test_data(self,path_to_file):
+
+        print("Loading test file...")
+
+        with open(path_to_file) as f:
+            content = f.readlines()
+
+        print("Starting the preprocessing..")
+        # you may also want to remove whitespace characters like `\n` at the end of each line
+        self.string_tokenizer([x.strip("\n") for x in content])
+        self.wrapper_test_sentence_words()
+        #self.do_sanity_checks()
+
+
+        return self.wrapped_sentences
 
 

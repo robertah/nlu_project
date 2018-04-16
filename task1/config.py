@@ -30,6 +30,7 @@ unk = '<unk>'  # unknown token
 
 # variables for the language model
 sentence_len = 30
+test_sentence_len = 1
 vocabulary_size = 20000
 embeddings_size = 100
 batch_size = 64

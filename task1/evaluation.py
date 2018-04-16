@@ -112,7 +112,7 @@ def test():
             init_state_current = graph.get_operation_by_name("init_state_current").outputs[0]
 
             # Evaluation
-            prediction = graph.get_operation_by_name("softmax_out_layer/predictions").outputs[0]
+            prediction = graph.get_operation_by_name("softmax_out_layer/vocab_indices_predictions").outputs[0]
 
             # Create batches for the test data, shuffle not needed
             batches = train_utils.batch_iter(data=dataset, batch_size=FLAGS.batch_size, num_epochs=1, shuffle=False)

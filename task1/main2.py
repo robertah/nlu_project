@@ -351,7 +351,7 @@ def main():
             utils = data_utilities.data_utils(model_to_load, embeddings_size, max_predicted_words, vocabulary_size, bos,
                                               eos, pad, unk)
 
-            dataset = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_pkl)
+            dataset, _ = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_pkl)
             print(len(dataset))
             # dataset=dataset[0:50]  uncomment for testing and have results in the brief time
             dataset_size = len(dataset)

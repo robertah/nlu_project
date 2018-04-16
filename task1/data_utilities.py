@@ -75,7 +75,7 @@ class data_utils:
         """Use a special sentence-beginning symbol <bos> and a sentence-end symbol <eos>
         (please use exactly these, including brackets).  The <bos> symbol is the input, 
         when predicting the first word and the <eos> symbol you require your model 
-        to predict at the end of every sentence. Finally use <ukn> for words not in the vocabulary"""
+        to predict at the end of every sentence. Finally use <unk> for words not in the vocabulary"""
 
         print("Starting to wrap the sentences appropriately..")
         self.wrapped_sentences=[]

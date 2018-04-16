@@ -64,9 +64,9 @@ class data_utils:
                 wrapped_sentence.append(self.sentence_beginning)
                 sentence=self.check_for_unknown_words(sentence, nb_words)
                 wrapped_sentence.extend(sentence)
-
+                wrapped_sentence.append(self.sentence_end)
+                wrapped_sentence.extend(self.padding_placeholder for i in range(0, padding_needed))
                 self.wrapped_sentences.append(wrapped_sentence)
-                #print(wrapped_sentence)
                 
         print("Finished preprocessing test sentences")
 
@@ -104,7 +104,7 @@ class data_utils:
 
                 self.wrapped_sentences.append(wrapped_sentence)
                 #print(wrapped_sentence)
-                
+
         print("Finished preprocessing")
 
 
@@ -221,7 +221,7 @@ class data_utils:
         self.wrapper_test_sentence_words()
         #self.do_sanity_checks()
 
-        return self.wrapped_sentences
+        return self.wrapped_sentences, list(self.vocabulary_words_list)
 
 
     def load_vocabulary(self, pickle_filename):

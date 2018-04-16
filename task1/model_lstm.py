@@ -1,38 +1,37 @@
 import tensorflow as tf
-import tensorflow.contrib.eager as tfe
-import numpy as np
 
 
 class lstm_model():
 
-    def __init__(self, vocab_size, embedding_size, words_in_sentence, batch_size,
+    def __init__(self, vocab_size, embedding_size, words_in_sentence,
                  lstm_cell_size,lstm_cell_size_down,down_project):
                 # sequence_length, filter_sizes, num_filters, l2_reg_lambda=0.0
 
         """Minibatch placeholders for input and output"""
-        self.input_x = tf.placeholder(tf.int64, [batch_size, words_in_sentence], name="input_x")
+        self.input_x = tf.placeholder(tf.int64, [None, words_in_sentence], name="input_x")
         self.input_y = tf.placeholder(tf.int64, [None, words_in_sentence], name="input_y")
 
         """ Please note that hidden and current state of the LSTM cell are combined together into a unique matrix due to old implementation
             https://stackoverflow.com/questions/40863006/what-is-the-parameter-state-is-tuple-in-tensorflow-used-for"""
-        self.init_state_hidden = tf.placeholder(tf.float32, [batch_size, lstm_cell_size],
+        self.init_state_hidden = tf.placeholder(tf.float32, [None, lstm_cell_size],
                                                 name='init_state_hidden')  # [batch_size, num_steps]
-        self.init_state_current = tf.placeholder(tf.float32, [batch_size, lstm_cell_size],
+        self.init_state_current = tf.placeholder(tf.float32, [None, lstm_cell_size],
                                                  name='init_state_current')  # [batch_size, num_steps]
         """Tensor for predictions"""
-        self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
+        self.vocab_indices_predictions = tf.placeholder(tf.float32, [None],
                                                         name='vocab_indices_predictions')
         # is_predicting = tf.placeholder(tf.bool, shape=(), name="is_predicting")
         # nb_words_per_sentence = tf.placeholder(tf.float32, [batch_size], name="nb_words_per_sentence")
 
         lstm_initial_state = (self.init_state_hidden, self.init_state_current)
 
+        xavier = tf.contrib.layers.xavier_initializer()
+
         with tf.device('/cpu:0'):
 
             """Embedding layer , word -> embedding dimensions"""
             with tf.variable_scope("embedding_layer"):
-                self.W_embedding = tf.Variable(tf.random_uniform([vocab_size, embedding_size], -0.1, 0.1),
-                                          name="W_embedding")  # [vocab_size, embedded_word_size]
+                self.W_embedding = tf.get_variable('W', [vocab_size, embedding_size], initializer=xavier)  # [vocab_size, embedded_word_size]
 
                 embedded_input = tf.nn.embedding_lookup(self.W_embedding,
                                                         self.input_x)  # [batch_size, num_steps, word_embedding_size]
@@ -76,13 +75,12 @@ class lstm_model():
                of the single sentences to be row-wise"""
             history_predictions = tf.stack(history_predictions, axis=1)
             self.predictions_per_sentence = tf.reshape(history_predictions,
-                                                       [batch_size * words_in_sentence, lstm_cell_size])
+                                                       [-1, lstm_cell_size])
 
             if down_project:
                 print("Creating down project layer")
                 with tf.variable_scope("down_project_layer"):
-                    W_down = tf.Variable(tf.random_uniform([lstm_cell_size, lstm_cell_size_down], -0.1, 0.1),
-                                          name="W_down")
+                    W_down = tf.get_variable('W_down', [lstm_cell_size, lstm_cell_size_down], initializer=xavier)
                     self.predictions_per_sentence = tf.matmul(self.predictions_per_sentence,
                                         W_down)
                     lstm_cell_size=lstm_cell_size_down
@@ -91,10 +89,8 @@ class lstm_model():
                 Requires : vocabulary size for predictions & numerical hidden predictions """
 
             with tf.variable_scope("softmax_out_layer"):
-
-                W_soft = tf.Variable(tf.random_uniform([lstm_cell_size, vocab_size], -0.1, 0.1),
-                                     name="W_soft")  # [vocab_size, embedded_word_size]
-                b_soft = tf.Variable(tf.random_uniform([vocab_size], -0.1, 0.1), name="b_soft")  # [vocab_size]
+                W_soft = tf.get_variable("W_soft", [lstm_cell_size, vocab_size], initializer=xavier)
+                b_soft = tf.get_variable("b_soft", [vocab_size], initializer=xavier)
 
                 """Please note: predictions_words is a vector which has nb_sentences*nb_words_per_sentence
                     as number of rows and hidden representation (lstm_cell_size) as feature columns."""
@@ -117,7 +113,7 @@ class lstm_model():
                    words.
                    """
 
-                self.vectorized_groundtruth = tf.reshape(self.input_y, [batch_size * words_in_sentence])
+                self.vectorized_groundtruth = tf.reshape(self.input_y, [-1])
                 all_losses = tf.nn.sparse_softmax_cross_entropy_with_logits(logits=self.logits,
                                                                             labels=self.vectorized_groundtruth)
                 self.loss = tf.reduce_sum(all_losses)

@@ -4,7 +4,7 @@ from config import *
 from random import randint
 from config import *
 import data_utilities
-import model_lstm2
+import model_lstm
 import os
 import numpy as np
 import training_utils as train_utils

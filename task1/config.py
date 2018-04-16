@@ -43,7 +43,6 @@ data_folder = '../data'
 train_set = data_folder + '/sentences.train'
 eval_set = data_folder + '/sentences.eval'
 cont_set = data_folder + '/sentences.continuation'
-test_set = data_folder + ''  # TODO add path to test set when we have it
 embeddings = data_folder + '/wordembeddings-dim100.word2vec'
 
 # path to output folder
@@ -58,3 +57,6 @@ unk = '<unk>'  # unknown token
 # saved vocabulary
 vocabulary_pkl = 'vocabulary.pkl'
 
+training_with_w2v = True if task == 1 and experiment == 'B' else False
+lstm_cell_state = lstm_cell_state_down if task == 1 and experiment != 'C' else 2 * lstm_cell_state_down
+down_project = False if task == 1 and experiment != 'C' else True

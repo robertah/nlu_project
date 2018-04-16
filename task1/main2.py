@@ -13,6 +13,7 @@ import numpy as np
 import training_utils as train_utils
 import testing_utils as testing_utils
 import load_embeddings as load_embeddings
+import experiment_params
 
 """Upgrade to TensorFlow 1.7 to include updates for eager execution:
 $ pip install --upgrade tensorflow
@@ -28,6 +29,7 @@ Eager execution tensorflow to enable the recurrent computaton in the lstm"""
    """
 
 print("Tensorflow eager execution set to ", tf.executing_eagerly())
+
 
 
 def main():
@@ -47,11 +49,8 @@ def main():
 
     """load configs & data -> preprocessing"""
 
-    if lstm_cell_state > lstm_cell_state_down:
-        down_project = True
-    else:
-        down_project = False
-    is_predicting = True
+    training_with_w2v, lstm_cell_state, down_project = experiment_params(task, experiment)
+
     max_predicted_words = 20
 
     """ PARAMETERS INTO TENSORFLOW FLAGS

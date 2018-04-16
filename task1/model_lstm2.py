@@ -6,8 +6,8 @@ import numpy as np
 class lstm_model():
 
     def __init__(self, vocab_size, embedding_size, words_in_sentence, batch_size,
-                 lstm_cell_size,lstm_cell_size_down,down_project):  
-                 # sequence_length, filter_sizes, num_filters, l2_reg_lambda=0.0
+                 lstm_cell_size,lstm_cell_size_down,down_project):
+                # sequence_length, filter_sizes, num_filters, l2_reg_lambda=0.0
 
         """Minibatch placeholders for input and output"""
         self.input_x = tf.placeholder(tf.int64, [batch_size, words_in_sentence], name="input_x")
@@ -24,8 +24,8 @@ class lstm_model():
         """Tensor for predictions"""
         self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
                                                         name='vocab_indices_predictions')
-        #is_predicting = tf.placeholder(tf.bool, shape=(), name="is_predicting")
-        #nb_words_per_sentence = tf.placeholder(tf.float32, [batch_size], name="nb_words_per_sentence")
+        # is_predicting = tf.placeholder(tf.bool, shape=(), name="is_predicting")
+        # nb_words_per_sentence = tf.placeholder(tf.float32, [batch_size], name="nb_words_per_sentence")
 
         lstm_initial_state = (self.init_state_hidden, self.init_state_current)
 
@@ -54,7 +54,7 @@ class lstm_model():
                     """At run time, if the network is predicting and some sentence is in principle finished,
                        we use the last word predicted by the network in the previous step. Please note that we predict up to the 30th word"""
 
-                    #if is_predicting is not None:
+                    # if is_predicting is not None:
                     #    words = embedded_input[:, column_words, :]
                     #    for i in range(words_in_sentence):
                     #        """nb_words_per_sentence is an array which stores the length of each sentence in the matrix"""
@@ -98,7 +98,6 @@ class lstm_model():
                                      name="W_soft")  # [vocab_size, embedded_word_size]
                 b_soft = tf.Variable(tf.random_uniform([vocab_size], -0.1, 0.1), name="b_soft")  # [vocab_size]
 
-
                 """Please note: predictions_words is a vector which has nb_sentences*nb_words_per_sentence
                     as number of rows and hidden representation (lstm_cell_size) as feature columns."""
                 self.logits = tf.matmul(self.predictions_per_sentence,
@@ -106,12 +105,12 @@ class lstm_model():
                 """We need to get probabilities out of logits.
                    We need to keep just the highest probable next word for each word in the batch
                    This next word is mapped to an index of the vocabulary"""
-                #self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
+                # self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
                 #                                          name='vocab_indices_predictions')
                 self.vocab_indices_predictions = tf.argmax(tf.nn.softmax(self.logits, name="vocab_indices_predictions"), axis=1)
-                #self.vocab_indices_predictions = indices_predictions
+                # self.vocab_indices_predictions = indices_predictions
 
-            #if not is_predicting:
+            # if not is_predicting:
             
             with tf.name_scope("loss"):
 

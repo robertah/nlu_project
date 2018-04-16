@@ -34,6 +34,8 @@ lstm_cell_state_down = 512
 checkpoint_every = 100
 runs_dir = "/runs/"
 checkpoint_prefix = os.path.join(runs_dir, "model")
+num_checkpoints = 5
+
 evaluate_every = 100
 
 # path to data folder and data sets

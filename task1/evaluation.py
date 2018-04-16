@@ -56,8 +56,6 @@ def test():
 
     print("Testing...")
 
-    # TODO change eval_set into test_set when we have test data
-
     # data loading parameters
     tf.flags.DEFINE_string("data_file_path", data_folder, "Path to the data folder.")
     tf.flags.DEFINE_string("test_set", eval_set, "Path to the test data")

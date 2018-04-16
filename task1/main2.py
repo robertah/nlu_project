@@ -13,6 +13,7 @@ import numpy as np
 import training_utils as train_utils
 import testing_utils as testing_utils
 import load_embeddings as load_embeddings
+import experiment_params
 
 """Upgrade to TensorFlow 1.7 to include updates for eager execution:
 $ pip install --upgrade tensorflow
@@ -30,28 +31,13 @@ Eager execution tensorflow to enable the recurrent computaton in the lstm"""
 print("Tensorflow eager execution set to ", tf.executing_eagerly())
 
 
-def main():
-    # load variables from config.yml
-    # with open('config.yaml', 'r') as stream:
-    #     try:
-    #         config = yaml.load(stream)
-    #     except yaml.YAMLError as exc:
-    #         print(exc)
-    '''    Testing if it works
-    print(config['token']['bos'])
 
-    for file in os.listdir(config['path']['data']):
-        if file.endswith(".txt"):
-            print(file)
-    '''
+def main():
 
     """load configs & data -> preprocessing"""
 
-    if lstm_cell_state > lstm_cell_state_down:
-        down_project = True
-    else:
-        down_project = False
-    is_predicting = True
+    training_with_w2v, lstm_cell_state, down_project = experiment_params(task, experiment)
+
     max_predicted_words = 20
 
     """ PARAMETERS INTO TENSORFLOW FLAGS
@@ -73,7 +59,7 @@ def main():
     tf.flags.DEFINE_integer("evaluate_every", evaluate_every,
                             "Evaluate model on dev set after this many steps (default: 100)")
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
-    tf.flags.DEFINE_integer("num_checkpoints", 5, "Number of checkpoints to store (default: 5)")
+    tf.flags.DEFINE_integer("num_checkpoints", num_checkpoints, "Number of checkpoints to store (default: 5)")
     tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the lastm cell")
     tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lastm cell")
 

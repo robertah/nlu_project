@@ -12,8 +12,6 @@ class lstm_model():
         """Minibatch placeholders for input and output"""
         self.input_x = tf.placeholder(tf.int64, [batch_size, words_in_sentence], name="input_x")
         self.input_y = tf.placeholder(tf.int64, [None, words_in_sentence], name="input_y")
-        # TODO: place learning rate outside the model and feed it
-        self.learning_rate = 0.000001
 
         """ Please note that hidden and current state of the LSTM cell are combined together into a unique matrix due to old implementation
             https://stackoverflow.com/questions/40863006/what-is-the-parameter-state-is-tuple-in-tensorflow-used-for"""
@@ -126,7 +124,7 @@ class lstm_model():
 
             with tf.name_scope("backprop"):
 
-                optimizer = tf.train.AdamOptimizer(self.learning_rate)
+                optimizer = tf.train.AdamOptimizer()
                 variables_to_update = tf.trainable_variables()
                 updates, _ = tf.clip_by_global_norm(tf.gradients(self.loss, variables_to_update), clip_norm=5)
                 train_step = optimizer.apply_gradients(zip(updates, variables_to_update))

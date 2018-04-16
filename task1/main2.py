@@ -294,15 +294,12 @@ def main():
         """The network is doing predictions"""
         """Restore model for predictions"""
 
-        # TODO: move variable in config and pu those in place of numbers below
-        # config.batch_size = 1
-        # config.words_in_sentence = 1
 
         lstm_network = model_lstm2.lstm_model(
             vocab_size=FLAGS.vocabulary_size,
             embedding_size=FLAGS.embeddings_size,
-            words_in_sentence=1,
-            batch_size=1,
+            words_in_sentence=test_sentence_len,
+            batch_size=test_batch_size,
             lstm_cell_size=lstm_cell_state,
             lstm_cell_size_down=lstm_cell_state_down,
             down_project=down_project

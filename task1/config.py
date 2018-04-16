@@ -7,16 +7,17 @@ import os
 # number of the group for the project
 n_group = '20'
 
-# experiment
+# project task number and experiment letter
+task = 1
 experiment = 'A'  # 'B' or 'C'  # TODO pass the parameter with command line?
 
 # path to data folder and data sets
 data_folder = '../data'
-train_set = '../data/sentences.train'
-eval_set = '../data/sentences.eval'
-cont_set = '../data/sentences.continuation'
-test_set = ''  # TODO add path to test set when we have it
-embeddings = '../data/wordembeddings-dim100.word2vec'
+train_set = data_folder + '/sentences.train'
+eval_set = data_folder + '/sentences.eval'
+cont_set = data_folder + '/sentences.continuation'
+test_set = data_folder + ''  # TODO add path to test set when we have it
+embeddings = data_folder + '/wordembeddings-dim100.word2vec'
 
 # path to output folder
 output_folder = '/output'
@@ -54,6 +55,6 @@ w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used
 w2v_dataset_name = "wordembeddings-dim100.word2vec"  # TODO not used
 model_to_load = True
-lstm_is_training = False  # TODO need to be set at runtime?
+lstm_is_training = True if task != 1 else False  # TODO need to be set at runtime?
 training_with_w2v = False
 shuffle_training = False

@@ -53,7 +53,10 @@ max_global_steps = 4500
 w2v_model_filename = "w2v_model"  # TODO not used
 dataset_filename = "input_data"  # TODO not used
 w2v_dataset_name = "wordembeddings-dim100.word2vec"  # TODO not used
-model_to_load = True
-lstm_is_training = False  # TODO need to be set at runtime?
+model_to_load = True  # Set to False unless want to use own w2vecs
+lstm_is_training = True  # TODO need to be set at runtime?
 training_with_w2v = False
 shuffle_training = False
+
+# file to load for testing/prediction
+training_file_number = 1523480613

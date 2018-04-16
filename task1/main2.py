@@ -3,6 +3,7 @@ import tensorflow as tf
 import time
 import datetime
 from random import randint
+import config
 from config import *
 import data_utilities
 import model_lstm2
@@ -294,8 +295,8 @@ def main():
         """Restore model for predictions"""
 
         # TODO: move variable in config and pu those in place of numbers below
-        # batch_size=1
-        # words_in_sentence=1
+        # config.batch_size = 1
+        # config.words_in_sentence = 1
 
         lstm_network = model_lstm2.lstm_model(
             vocab_size=FLAGS.vocabulary_size,
@@ -306,15 +307,32 @@ def main():
             lstm_cell_size_down=lstm_cell_state_down,
             down_project=down_project
         )
+        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523480613/checkpoints"))
 
-        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523815045/checkpoints"))
+        # Mel's
+        # out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
+        # checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
+        # meta_path = tf.train.latest_checkpoint(checkpoint_dir) + '.meta'
+        # checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number),
+        #                                                  "checkpoints"))
+
         with tf.Session() as sess:
 
-            sess.run(tf.global_variables_initializer())
-            saver = tf.train.Saver(max_to_keep=5)
-            # saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-100.meta')
+            # Mel's
+            # saver = tf.train.import_meta_graph(meta_path)
+            # saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
+
+
+            # sess.run(tf.global_variables_initializer())
+            # saver = tf.train.Saver(max_to_keep=5)
+            saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-1600.meta')
             saver.restore(sess,
-                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523815045/checkpoints/")))
+                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523480613/checkpoints")))
+
+            # Mel's
+            # saver.restore(sess,
+            #               tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs", str(training_file_number),
+            #                                                       "checkpoints")))
 
             input_x = tf.get_default_graph().get_tensor_by_name("input_x:0")
 

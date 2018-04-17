@@ -45,9 +45,6 @@ eval_set = data_folder + '/sentences.eval'
 cont_set = data_folder + '/sentences.continuation'
 embeddings = data_folder + '/wordembeddings-dim100.word2vec'
 
-# path to output folder
-output_folder = '/output'
-
 # token used for the language model
 bos = '<bos>'  # begin of sentence token
 eos = '<eos>'  # end of sentence token

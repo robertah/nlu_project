@@ -66,9 +66,9 @@ def main():
     tf.flags.DEFINE_boolean("log_device_placement", False, "Log placement of ops on devices")
 
     # for running on EULER, adapt this
-    tf.flags.DEFINE_integer("inter_op_parallelism_threads", 0,
+    tf.flags.DEFINE_integer("inter_op_parallelism_threads", 4,
                             "TF nodes that perform blocking operations are enqueued on a pool of inter_op_parallelism_threads available in each process (default 0).")
-    tf.flags.DEFINE_integer("intra_op_parallelism_threads", 0,
+    tf.flags.DEFINE_integer("intra_op_parallelism_threads", 4,
                             "The execution of an individual op (for some op types) can be parallelized on a pool of intra_op_parallelism_threads (default: 0).")
 
     """Printing model configuration to command line"""

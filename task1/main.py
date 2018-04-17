@@ -227,7 +227,10 @@ def main():
                                           eos, pad, unk)
 
         model_w2v, dataset = utils.load_train_data(train_set)
+        #dataset=dataset[0:100]
+
         dataset_size = len(dataset)
+
 
         print("Total sentences in the dataset: ", dataset_size)
         print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
@@ -245,7 +248,7 @@ def main():
         """batches is a generator, please refer to training_utilities for more information.
            batch_iter function is executed if an iteration is performed on op of it and it
            gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
-        batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=False,
+        batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=shuffle_training,
                                          testing=False)
 
         for batch in batches:

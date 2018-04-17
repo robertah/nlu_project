@@ -1,4 +1,5 @@
 import numpy as np
+import random
 
 
 def word_2_vec(model_w2v, batch):
@@ -100,8 +101,9 @@ def batch_iter(data, batch_size, num_epochs, shuffle=False, testing=False):
 
         # Shuffle the data at each epoch
         if shuffle:
-            shuffle_indices = np.random.permutation(np.arange(data_size))
-            shuffled_data = data[shuffle_indices]
+            random.shuffle(data)
+            shuffled_data = data
+            print("RANDOM SHUFFLED ",shuffled_data[0])
         else:
             shuffled_data = data
 
@@ -109,6 +111,6 @@ def batch_iter(data, batch_size, num_epochs, shuffle=False, testing=False):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
             # print(shuffled_data[start_index:end_index])
-
-            yield zip(shuffled_data[start_index:end_index], np.copy(shuffled_data[start_index:end_index]))
-            # batches.append(shuffled_data[start_index:end_index])
+            if end_index-start_index == batch_size:
+                yield zip(shuffled_data[start_index:end_index], np.copy(shuffled_data[start_index:end_index]))
+                # batches.append(shuffled_data[start_index:end_index])

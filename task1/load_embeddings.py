@@ -27,6 +27,6 @@ def load_embedding(session, vocab, emb, path, dim_embedding, vocab_size):
         
     print("%d words out of %d could be loaded" % (matches, vocab_size))
     
-    pretrained_embeddings = tf.placeholder(tf.float32, [None, None]) 
+    pretrained_embeddings = tf.placeholder(tf.float32, [vocab_size, dim_embedding], name="W_embedding") 
     assign_op = emb.assign(pretrained_embeddings)
     session.run(assign_op, {pretrained_embeddings: external_embedding}) # here, embeddings are actually set

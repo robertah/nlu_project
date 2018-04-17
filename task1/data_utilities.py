@@ -104,7 +104,7 @@ class data_utils:
 
                 self.wrapped_sentences.append(wrapped_sentence)
                 #print(wrapped_sentence)
-
+        print("Total sentences considered for training ",len(self.wrapped_sentences))
         print("Finished preprocessing")
 
 

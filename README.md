@@ -33,5 +33,6 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 - scp -r project_folder username@login.leonhard.ethz.ch:/cluster/home/username/nlu_project/
 - insert your eth password
 - Now open another terminal, login with -> ssh username@login.leonhard.ethz.ch
-- Once logged in -> cd /cluster/home/username/nlu_project/task1/
+- Once logged in -> cd /cluster/home/username/project_folder/task1/
 - digit -> bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" python main.py
+- To upload just the modifed python file (after modifying the config for instance) digit -> scp -r project_folder/task1 username@login.leonhard.ethz.ch:/cluster/home/username/project_folder/

@@ -36,7 +36,7 @@ def main():
 
     """load configs & data -> preprocessing"""
 
-    training_with_w2v, lstm_cell_state, down_project = experiment_params(task, experiment)
+    training_with_w2v, lstm_cell_state, down_project = experiment_params.task_params(task, experiment)
 
     max_predicted_words = 20
 

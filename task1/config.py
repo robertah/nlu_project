@@ -8,7 +8,7 @@ n_group = '20'
 
 # project task number and experiment letter
 task = 1
-experiment = 'A'  # 'B' or 'C'
+experiment = 'B'  # 'B' or 'C'
 
 # max number of steps during training (number of cycles for training)
 max_global_steps = 4500
@@ -16,7 +16,7 @@ max_global_steps = 4500
 # run parameters
 model_to_load = True # TODO remove?
 lstm_is_training = True
-shuffle_training = False # use when running on cluster
+shuffle_training = False # use True when running on cluster
 
 # variables for the language model
 sentence_len = 30

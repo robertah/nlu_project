@@ -236,14 +236,69 @@ def main():
         print("Example of a random wrapped sentence in dataset ", dataset[(randint(0, dataset_size))])
         print("Example of the first wrapped sentence in dataset ", dataset[0])
 
-        if training_with_w2v:
-            Total_IDs = len(utils.vocabulary_words_list)
 
-            vocab_and_IDs = dict(zip(utils.vocabulary_words_list, [idx for idx in range(Total_IDs)]))
+        with tf.Graph().as_default():
+            session_conf = tf.ConfigProto(
+                allow_soft_placement=FLAGS.allow_soft_placement,
+                log_device_placement=FLAGS.log_device_placement,
+                inter_op_parallelism_threads=FLAGS.inter_op_parallelism_threads,
+                intra_op_parallelism_threads=FLAGS.intra_op_parallelism_threads)
+            sess = tf.Session(config=session_conf)
+            with sess.as_default():
+            # Initialize model
+                lstm_network = model_lstm.lstm_model(
+                    vocab_size=FLAGS.vocabulary_size,
+                    embedding_size=FLAGS.embeddings_size,
+                    words_in_sentence=sentence_len,
+                    lstm_cell_size=lstm_cell_state,
+                    lstm_cell_size_down=lstm_cell_state_down,
+                    down_project=down_project
 
-            load_embeddings.load_embedding(session=sess, vocab=vocab_and_IDs, emb=lstm_network.W_embedding,
-                                           path=data_folder + "/" + embeddings, dim_embedding=embeddings_size,
-                                           vocab_size=Total_IDs)
+                )
+            """Please note that the tf variables keeps updated, ready to be printed out or
+               logged to file"""
+
+            global_step = tf.Variable(0, name="global_step", trainable=False)
+            optimizer = tf.train.AdamOptimizer()
+            train_optimizer = optimizer.minimize(lstm_network.loss, global_step=global_step)
+
+            """ Output directory for models and summaries """
+            timestamp = str(int(time.time()))
+            out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
+            print("Writing to {}\n".format(out_dir))
+
+            """ Summaries for loss and accuracy """
+            loss_summary = tf.summary.scalar("loss", lstm_network.loss)
+            acc_summary = tf.summary.scalar("accuracy", lstm_network.accuracy)
+
+            """ Train Summaries """
+            train_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            train_summary_dir = os.path.join(out_dir, "summaries", "train")
+            train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
+
+            """ Dev summaries  """
+            dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
+            dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
+            dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
+
+            """ Checkpoint directory (Tensorflow assumes this directory already exists so we need to create it) """
+            checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
+            checkpoint_prefix = os.path.join(checkpoint_dir, "model")
+        
+            if not os.path.exists(checkpoint_dir):
+                os.makedirs(checkpoint_dir)
+            saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
+            sess.run(tf.global_variables_initializer())
+            lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
+            lstm_network.next_current_state = np.zeros([batch_size, lstm_cell_state])
+            
+            if training_with_w2v:
+                Total_IDs = len(utils.vocabulary_words_list)
+                vocab_and_IDs = dict(zip(utils.vocabulary_words_list, [idx for idx in range(Total_IDs)]))
+
+                load_embeddings.load_embedding(session=sess, vocab=vocab_and_IDs, emb=lstm_network.W_embedding,
+                                               path=data_folder + "/" + embeddings, dim_embedding=embeddings_size,
+                                               vocab_size=Total_IDs)
 
         """batches is a generator, please refer to training_utilities for more information.
            batch_iter function is executed if an iteration is performed on op of it and it

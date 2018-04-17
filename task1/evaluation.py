@@ -42,9 +42,9 @@ def write_perplexity(perplexities):
     :param perplexities: perplexities of test sentences
     """
 
-    output_file = "{}/group{}.perplexity{}".format(output_folder, n_group, experiment)
+    output_file = "group{}.perplexity{}".format(n_group, experiment)
 
-    with open(output_file, "w") as f:
+    with open(output_file, "w+") as f:
         for p in perplexities:
             f.write("{}\n".format(p))
 
@@ -60,7 +60,7 @@ def test():
     tf.flags.DEFINE_string("data_file_path", data_folder, "Path to the data folder.")
     tf.flags.DEFINE_string("test_set", eval_set, "Path to the test data")
     # test parameters
-    tf.flags.DEFINE_integer("batch_size", batch_size, "Batch Size (default: 1)")
+    tf.flags.DEFINE_integer("batch_size", test_batch_size, "Batch Size (default: 1)")
     # tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir, "Checkpoint directory from training run")
     # Tensorflow parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -124,8 +124,8 @@ def test():
 
                 feed_dict = {
                     input_x: x_batch,
-                    init_state_hidden: np.zeros([batch_size, lstm_cell_state]),
-                    init_state_current: np.zeros([batch_size, lstm_cell_state])
+                    init_state_hidden: np.zeros([FLAGS.batch_size, lstm_cell_state]),
+                    init_state_current: np.zeros([FLAGS.batch_size, lstm_cell_state])
                 }
 
                 estimates = sess.run(prediction, feed_dict)
@@ -133,7 +133,7 @@ def test():
 
                 for j, sentence in enumerate(x_batch):
                     sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
-                    print("Sentence {} in batch {}: perplexity {}".format(j, i, sentence_perplexity))
+                    print("Sentence {} in batch {}: perplexity {}".format(FLAGS.batch_size*i + j, i, sentence_perplexity))
                     perplexities.append(sentence_perplexity)
 
     print("Check if perplexities and test set have the same size: ", len(perplexities) == dataset_size)

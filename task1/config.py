@@ -11,12 +11,17 @@ task = 1
 experiment = 'B'  # 'B' or 'C'
 
 # max number of steps during training (number of cycles for training)
-max_global_steps = 4500
+
+#written by Francesco : note now we are going through the dataset more times so this is way higher
+#In case it is too much we can always stop before the cluster (it is 6 times the dataset the max_global_steps)
+#Note each time the data is shuffled !!! So this prevents overfitting and better training for better local
+#minima
+max_global_steps = 200000
 
 # run parameters
-model_to_load = True # TODO remove?
-lstm_is_training = True
-shuffle_training = False # use True when running on cluster
+model_to_load = True # TODO remove? -> do not remove it yet !
+lstm_is_training = True # change if u want to predict
+shuffle_training = True # NEVER modify, even loclly now everything works
 
 # variables for the language model
 sentence_len = 30
@@ -43,11 +48,7 @@ data_folder = '../data'
 train_set = data_folder + '/sentences.train'
 eval_set = data_folder + '/sentences.eval'
 cont_set = data_folder + '/sentences.continuation'
-test_set = data_folder + ''  # TODO add path to test set when we have it
 embeddings = data_folder + '/wordembeddings-dim100.word2vec'
-
-# path to output folder
-output_folder = '/output'
 
 # token used for the language model
 bos = '<bos>'  # begin of sentence token
@@ -58,3 +59,6 @@ unk = '<unk>'  # unknown token
 # saved vocabulary
 vocabulary_pkl = 'vocabulary.pkl'
 
+training_with_w2v = True if task == 1 and experiment == 'B' else False
+lstm_cell_state = lstm_cell_state_down if task == 1 and experiment != 'C' else 2 * lstm_cell_state_down
+down_project = False if task == 1 and experiment != 'C' else True

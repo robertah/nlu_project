@@ -42,7 +42,7 @@ def write_perplexity(perplexities):
     :param perplexities: perplexities of test sentences
     """
 
-    output_file = "{}/group{}.perplexity{}".format(output_folder, n_group, experiment)
+    output_file = "group{}.perplexity{}".format(n_group, experiment)
 
     with open(output_file, "w+") as f:
         for p in perplexities:
@@ -133,7 +133,7 @@ def test():
 
                 for j, sentence in enumerate(x_batch):
                     sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
-                    print("Sentence {} in batch {}: perplexity {}".format(j*i + j, i, sentence_perplexity))
+                    print("Sentence {} in batch {}: perplexity {}".format(FLAGS.batch_size*i + j, i, sentence_perplexity))
                     perplexities.append(sentence_perplexity)
 
     print("Check if perplexities and test set have the same size: ", len(perplexities) == dataset_size)

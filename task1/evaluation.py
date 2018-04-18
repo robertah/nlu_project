@@ -11,7 +11,7 @@ def perplexity(sentence, estimate, vocabulary):
     Compute the perplexity of a sentence given its estimate and the word dictionary
 
     :param sentence: a sentence (in vector form) of test set (sentence_len)
-    :param estimate: the estimate of the sentence (sentence_len, vocabulary_size)
+    :param estimate: the estimate of the sentence without bos (sentence_len - 1, vocabulary_size)
     :param vocabulary: the vocabulary containing 20k most frequent words
 
     :return: perplexity of the given sentence
@@ -24,7 +24,7 @@ def perplexity(sentence, estimate, vocabulary):
     probs = []  # array with word probabilities
 
     # iterate until we reach the end of the sentence or a pad token
-    while i < sentence_len and sentence[i] != index_pad:
+    while i < sentence_len - 1 and sentence[i] != index_pad:
         # take the probability related to the true word
         groundtruth_prob = estimate[i][sentence[i]]
         probs.append(groundtruth_prob)
@@ -129,7 +129,7 @@ def test(dataset):
                 estimates = np.reshape(estimates, [-1, sentence_len, vocabulary_size])
 
                 for j, sentence in enumerate(x_batch):
-                    sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
+                    sentence_perplexity = perplexity(sentence, estimates[j, 1:], vocabulary_words_list)
                     print("Sentence {} in batch {}: perplexity {}".format(FLAGS.batch_size*i + j, i, sentence_perplexity))
                     perplexities.append(sentence_perplexity)
 

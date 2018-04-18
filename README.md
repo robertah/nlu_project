@@ -13,13 +13,16 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 
 
 ### Files
+- **main.py**
+- **model_lstm.py** - Defines the recurrent neural network with LSTM cells
 - **config.py** - Contains the configuration variables used in the project
 - **data_utilities.py** - Used for data preprocessing (tokenizing first 28 words of sentence, adding special tokens
  (`<bos>`, `<eos>`, `<unk>`, `<pad>`),...)
 - **training_utils.py** - Contains conversion from word to vector (and vice versa), and creates batches for training purposes
-- **model_lstm2.py** - Defines the recurrent neural network with LSTM cells
+- **testing_utils.py**
+- **load_embeddings.py**
 - **evaluation.py** - Used for computation of sentence perplexity: outputs a file of the form "group20.perplexityX" (X refering to the experiment A, B or C)
-- **main2.py**
+
 
 
 ### Note

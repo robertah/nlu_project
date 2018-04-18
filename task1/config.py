@@ -7,7 +7,7 @@ import os
 n_group = '20'
 
 # project task number and experiment letter
-task = 1
+task = 1  # 1 or 2
 experiment = 'A'  # 'A' or 'B' or 'C'
 
 # max number of steps during training (number of cycles for training)

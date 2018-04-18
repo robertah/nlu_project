@@ -288,7 +288,17 @@ def main():
             lstm_cell_size_down=lstm_cell_state_down,
             down_project=down_project
         )
-        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints"))
+
+
+        out_dir = os.path.abspath(os.path.join(os.path.curdir, runs_dir))
+        all_runs = [os.path.join(out_dir, o) for o in os.listdir(out_dir)
+                if os.path.isdir(os.path.join(out_dir, o))]
+        latest_run = max(all_runs, key=os.path.getmtime)  # get the latest run
+        checkpoint_dir = os.path.abspath(os.path.join(latest_run, "checkpoints"))
+
+        checkpoint_prefix = tf.train.latest_checkpoint(checkpoint_dir)
+
+        #checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints"))
 
         # Mel's
         # out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
@@ -306,9 +316,12 @@ def main():
 
             # sess.run(tf.global_variables_initializer())
             # saver = tf.train.Saver(max_to_keep=5)
-            saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-1600.meta')
-            saver.restore(sess,
-                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints")))
+            saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_prefix))
+            saver.restore(sess, checkpoint_prefix)
+
+            #saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-1600.meta')
+            #saver.restore(sess,
+            #              tf.train.latest_checkpoint(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints")))
 
             # Mel's
             # saver.restore(sess,

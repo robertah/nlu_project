@@ -48,6 +48,7 @@ data_folder = '../data'
 train_set = data_folder + '/sentences.train'
 eval_set = data_folder + '/sentences.eval'
 cont_set = data_folder + '/sentences.continuation'
+test_set = data_folder + '/sentences_test'
 embeddings = data_folder + '/wordembeddings-dim100.word2vec'
 
 # token used for the language model

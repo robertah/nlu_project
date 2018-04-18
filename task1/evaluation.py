@@ -44,12 +44,12 @@ def write_perplexity(perplexities):
 
     output_file = "group{}.perplexity{}".format(n_group, experiment)
 
-    with open(output_file, "w+") as f:
+    with open(output_file, "w") as f:
         for p in perplexities:
             f.write("{}\n".format(p))
 
 
-def test():
+def test(dataset):
     """
     Test step: restore the trained model and compute the perplexities for the test data
     """
@@ -58,7 +58,7 @@ def test():
 
     # data loading parameters
     tf.flags.DEFINE_string("data_file_path", data_folder, "Path to the data folder.")
-    tf.flags.DEFINE_string("test_set", eval_set, "Path to the test data")
+    tf.flags.DEFINE_string("test_set", dataset, "Path to the test data")
     # test parameters
     tf.flags.DEFINE_integer("batch_size", test_batch_size, "Batch Size (default: 1)")
     # tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir, "Checkpoint directory from training run")
@@ -74,8 +74,6 @@ def test():
     print("")
 
     print("Loading and preprocessing test dataset \n")
-
-    # TODO (best practice) it may be better to remove the class for data utils and keep the methods
 
     dataset, vocabulary_words_list = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len,
                                                                vocabulary_size, bos,
@@ -118,7 +116,6 @@ def test():
 
             print("Evaluating...")
             for i, batch in enumerate(batches):
-                # TODO may need to put words_mapper_to_vocab_indices in data utils since it is used also for testing
                 x_batch, _ = zip(*batch)
                 x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, vocabulary_words_list)
 
@@ -141,4 +138,4 @@ def test():
 
 
 if __name__ == '__main__':
-    test()
+    test(test_set)

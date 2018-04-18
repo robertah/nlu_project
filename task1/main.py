@@ -59,7 +59,7 @@ def main():
     tf.flags.DEFINE_integer("checkpoint_every", checkpoint_every, "Save model after this many steps (default: 100)")
     tf.flags.DEFINE_integer("num_checkpoints", num_checkpoints, "Number of checkpoints to store (default: 5)")
     tf.flags.DEFINE_integer("lstm_cell_state", lstm_cell_state, "Number of units inside the lastm cell")
-    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lastm cell")
+    tf.flags.DEFINE_integer("lstm_cell_state_down", lstm_cell_state_down, "Number of units inside the lstm cell")
 
     # Tensorflow Parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")

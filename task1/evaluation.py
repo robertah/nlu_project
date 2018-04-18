@@ -83,7 +83,7 @@ def test(dataset):
     print(dataset_size)
     print(len(vocabulary_words_list))
 
-    out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs"))
+    out_dir = os.path.abspath(os.path.join(os.path.curdir, runs_dir))
     all_runs = [os.path.join(out_dir, o) for o in os.listdir(out_dir)
                 if os.path.isdir(os.path.join(out_dir, o))]
     latest_run = max(all_runs, key=os.path.getmtime)  # get the latest run

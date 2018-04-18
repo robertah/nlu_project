@@ -8,7 +8,7 @@ n_group = '20'
 
 # project task number and experiment letter
 task = 1
-experiment = 'A'  # 'B' or 'C'
+experiment = 'C'  # 'B' or 'C'
 
 # max number of steps during training (number of cycles for training)
 
@@ -37,7 +37,7 @@ lstm_cell_state_down = 512
 
 # checkpoint
 checkpoint_every = 100
-runs_dir = "/runs/"
+runs_dir = "runs_"+experiment
 checkpoint_prefix = os.path.join(runs_dir, "model")
 num_checkpoints = 5
 

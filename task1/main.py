@@ -26,7 +26,7 @@ Eager execution tensorflow to enable the recurrent computaton in the lstm"""
    & others
    """
 
-print("Tensorflow eager execution set to ", tf.executing_eagerly())
+#print("Tensorflow eager execution set to ", tf.executing_eagerly())
 
 
 
@@ -82,69 +82,10 @@ def main():
         # print("{}={}".format(attr.upper(), value))            # change to this if using tensorflow version <= 1.3
     print("")
 
-    """Creating the model and the logger, ready to train and log results"""
 
-    with tf.Graph().as_default():
-        session_conf = tf.ConfigProto(
-            allow_soft_placement=FLAGS.allow_soft_placement,
-            log_device_placement=FLAGS.log_device_placement,
-            inter_op_parallelism_threads=FLAGS.inter_op_parallelism_threads,
-            intra_op_parallelism_threads=FLAGS.intra_op_parallelism_threads)
-        sess = tf.Session(config=session_conf)
-        with sess.as_default():
-            # Initialize model
-            lstm_network = model_lstm.lstm_model(
-                vocab_size=FLAGS.vocabulary_size,
-                embedding_size=FLAGS.embeddings_size,
-                words_in_sentence=sentence_len,
-                lstm_cell_size=lstm_cell_state,
-                lstm_cell_size_down=lstm_cell_state_down,
-                down_project=down_project
 
-            )
 
-        """Please note that the tf variables keeps updated, ready to be printed out or
-           logged to file"""
-
-        global_step = tf.Variable(0, name="global_step", trainable=False)
-        optimizer = tf.train.AdamOptimizer()
-        train_optimizer = optimizer.minimize(lstm_network.loss, global_step=global_step)
-
-        """ Output directory for models and summaries """
-        timestamp = str(int(time.time()))
-        out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
-        print("Writing to {}\n".format(out_dir))
-
-        """ Summaries for loss and accuracy """
-        loss_summary = tf.summary.scalar("loss", lstm_network.loss)
-        acc_summary = tf.summary.scalar("accuracy", lstm_network.accuracy)
-
-        """ Train Summaries """
-        train_summary_op = tf.summary.merge([loss_summary, acc_summary])
-        train_summary_dir = os.path.join(out_dir, "summaries", "train")
-        train_summary_writer = tf.summary.FileWriter(train_summary_dir, sess.graph)
-
-        """ Dev summaries  """
-        dev_summary_op = tf.summary.merge([loss_summary, acc_summary])
-        dev_summary_dir = os.path.join(out_dir, "summaries", "dev")
-        dev_summary_writer = tf.summary.FileWriter(dev_summary_dir, sess.graph)
-
-        """ Checkpoint directory (Tensorflow assumes this directory already exists so we need to create it) """
-        checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
-        checkpoint_prefix = os.path.join(checkpoint_dir, "model")
-        if not os.path.exists(checkpoint_dir):
-            os.makedirs(checkpoint_dir)
-        saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
-
-        """ Initialize all variables """
-        sess.run(tf.global_variables_initializer())
-        # sess.graph.finalize()
-
-        """All the training procedure below"""
-        lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
-        lstm_network.next_current_state = np.zeros([batch_size, lstm_cell_state])
-
-        def train_step(x_batch, y_batch):
+    def train_step(x_batch, y_batch):
             """
             A single training step, x_batch = y_batch
             Both are matrices indices of words
@@ -162,14 +103,14 @@ def main():
                  lstm_network.vocab_indices_predictions],
                 feed_dict)
 
-            print("Predictions indices w.r.t vocabulary")
-            print(vocab_idx_predictions)
-            print("Example of sentence predicted by the network by training")
-            print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list,
-                                                              is_tuple=True)[0:29])
-            print("Groundtruth for the sentence predicted by the network above")
-            print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch, [batch_size * 30]),
-                                                              utils.vocabulary_words_list)[0:29])
+            #print("Predictions indices w.r.t vocabulary")
+            #print(vocab_idx_predictions)
+            #print("Example of sentence predicted by the network by training")
+            #print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list,
+            #                                                  is_tuple=True)[0:29])
+            #print("Groundtruth for the sentence predicted by the network above")
+            #print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch, [batch_size * 30]),
+            #                                                  utils.vocabulary_words_list)[0:29])
 
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
@@ -178,7 +119,7 @@ def main():
             print("{}: step {}, loss {:g}, acc {:g}".format(time_str, step, loss, accuracy))
             train_summary_writer.add_summary(summaries, step)
 
-        def predicting_step(word, state):
+    def predicting_step(word, state):
 
             """The input in this case is represented by a single word"""
 
@@ -203,7 +144,7 @@ def main():
 
             return word_predicted, state
 
-        def dev_step(x_batch, y_batch, writer=None):
+    def dev_step(x_batch, y_batch, writer=None):
             """
             Evaluates model on a dev set
             TODO: it is not set properly , so change stuff if needed
@@ -264,7 +205,7 @@ def main():
 
             """ Output directory for models and summaries """
             timestamp = str(int(time.time()))
-            out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", timestamp))
+            out_dir = os.path.abspath(os.path.join(os.path.curdir, runs_dir, timestamp))
             print("Writing to {}\n".format(out_dir))
 
             """ Summaries for loss and accuracy """
@@ -284,11 +225,13 @@ def main():
             """ Checkpoint directory (Tensorflow assumes this directory already exists so we need to create it) """
             checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
             checkpoint_prefix = os.path.join(checkpoint_dir, "model")
-        
             if not os.path.exists(checkpoint_dir):
                 os.makedirs(checkpoint_dir)
             saver = tf.train.Saver(tf.global_variables(), max_to_keep=FLAGS.num_checkpoints)
+
+
             sess.run(tf.global_variables_initializer())
+            
             lstm_network.next_hidden_state = np.zeros([batch_size, lstm_cell_state])
             lstm_network.next_current_state = np.zeros([batch_size, lstm_cell_state])
             
@@ -345,7 +288,7 @@ def main():
             lstm_cell_size_down=lstm_cell_state_down,
             down_project=down_project
         )
-        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs/1523480613/checkpoints"))
+        checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints"))
 
         # Mel's
         # out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
@@ -365,7 +308,7 @@ def main():
             # saver = tf.train.Saver(max_to_keep=5)
             saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-1600.meta')
             saver.restore(sess,
-                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs/1523480613/checkpoints")))
+                          tf.train.latest_checkpoint(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints")))
 
             # Mel's
             # saver.restore(sess,

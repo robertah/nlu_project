@@ -29,7 +29,7 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 - To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`) in a `./data` folder at the same level as the task1 folder
 
 - To visualize graph in Tensorboard, type in terminal:<br />
-`$ tensorboard --logdir=/*path-to-project*/tas/runs/*run-IDnumber*/summaries/train`<br />
+`$ tensorboard --logdir=/<path-to-project>/tas/runs/<run-IDnumber>/summaries/train`<br />
 
 **To copy files or directories to cluster**<br/>
 From cluster:

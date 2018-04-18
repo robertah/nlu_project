@@ -297,7 +297,7 @@ def main():
                 vocab_and_IDs = dict(zip(utils.vocabulary_words_list, [idx for idx in range(Total_IDs)]))
 
                 load_embeddings.load_embedding(session=sess, vocab=vocab_and_IDs, emb=lstm_network.W_embedding,
-                                               path=data_folder + "/" + embeddings, dim_embedding=embeddings_size,
+                                               path=embeddings, dim_embedding=embeddings_size,
                                                vocab_size=Total_IDs)
 
         """batches is a generator, please refer to training_utilities for more information.

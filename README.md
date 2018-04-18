@@ -47,3 +47,16 @@ From cluster:
 - `$ module load python_gpu/3.6.1` (check https://scicomp.ethz.ch/wiki/Leonhard_beta_testing to see which version to load)
 - `$ pip install --user <package-to-install>` (in this case, install tensorflow=1.7 and gensim)
 - `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo <name-of-output-file.txt> -J <name-of-job> "python main.py"`
+
+**To run on Google-colab
+- First thing to do is : Runtime -> Change runtime type -> GPU 
+- Ask to make the repository public for few time to the current owner of the repository
+- While the repository is set to public, digit on a python cell of colab : !git clone https://github.com/robertah/nlu_project.git
+- Create a dir called "data" inside the directory <project_folder>, so "cd <project_folder>" and then "mkdir data"
+- Enter the data folder "cd data"
+- Then digit (in another python cell if you prefer)
+from google.colab import files
+uploaded = files.upload() 
+- Upload manually the data files following the correct local data path and wait for the data to be uploaded
+- Go to the task1 folder and digit "!python main.py"
+- In case some python module is not installed do "!pip install <module_name>"

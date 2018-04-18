@@ -29,13 +29,21 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 - To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`) in a `./data` folder at the same level as the task1 folder
 
 - To visualize graph in Tensorboard, type in terminal:<br />
-`$ tensorboard --logdir=/<path-to-project>/tas/runs/<run-IDnumber>/summaries/train`
+`$ tensorboard --logdir=/*path-to-project*/tas/runs/*run-IDnumber*/summaries/train`<br />
 
-### How to run on Leohnard cluster
-- cd /home/local_directory/project
-- scp -r project_folder username@login.leonhard.ethz.ch:/cluster/home/username/nlu_project/
-- insert your eth password
-- Now open another terminal, login with -> ssh username@login.leonhard.ethz.ch
-- Once logged in -> cd /cluster/home/username/project_folder/task1/
-- digit -> bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" python main.py
-- To upload just the modifed python file (after modifying the config for instance) digit -> scp -r project_folder/task1 username@login.leonhard.ethz.ch:/cluster/home/username/project_folder/
+**To copy files or directories to cluster**<br/>
+From cluster  <br/>
+- Log in with `ssh *username*@login.leonhard.ethz.ch` (for euler cluster, use `ssh *username*@euler.ethz.ch`)
+- Copy git directory directly to cluster using `git clone https://github.com/robertah/nlu_project.git` <br/>
+
+From local terminal <br/>
+- Copy local files to cluster using `scp *path-to-file-in-local-directory* *username*@login.leonhard.ethz.ch:/cluster/home/*username*/*project-folder*` <br/>
+  (Use `-r` to copy a directory)
+
+
+**To run script on cluster** <br/>
+From cluster <br/>
+- `$ cd *path-to-directory*` (for example, `$ cd /cluster/home/*username*/project_nlu/task1`)
+- `$ module load python_gpu/3.6.1` (check https://scicomp.ethz.ch/wiki/Leonhard_beta_testing to see which version to load)
+- `$ pip install --user *package-to-install*` (in this case, install tensorflow=1.7 and gensim)
+- `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo *name-of-output-file.txt* -J *name-of-job* "python main.py"`

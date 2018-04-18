@@ -33,17 +33,17 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 
 **To copy files or directories to cluster**<br/>
 From cluster:
-- Log in with `ssh *username*@login.leonhard.ethz.ch` (for euler cluster, use `ssh *username*@euler.ethz.ch`)
+- Log in with `ssh <username>@login.leonhard.ethz.ch` (for euler cluster, use ssh <username>@euler.ethz.ch)
 - Copy git directory directly to cluster using `git clone https://github.com/robertah/nlu_project.git` <br/>
 
 From local terminal:
-- Copy local files to cluster using `scp *path-to-file-in-local-directory* *username*@login.leonhard.ethz.ch:/cluster/home/*username*/*project-folder*` <br/>
+- Copy local files to cluster using `scp <path-to-file-in-local-directory> <username>@login.leonhard.ethz.ch:/cluster/home/<username>/<project-folder>` <br/>
   (Use `-r` to copy a directory)
 
 
 **To run script on cluster** <br/>
 From cluster:
-- `$ cd *path-to-directory*` (for example, `$ cd /cluster/home/*username*/project_nlu/task1`)
+- `$ cd <path-to-directory>` (for example, $ cd /cluster/home/*username*/project_nlu/task1)
 - `$ module load python_gpu/3.6.1` (check https://scicomp.ethz.ch/wiki/Leonhard_beta_testing to see which version to load)
-- `$ pip install --user *package-to-install*` (in this case, install tensorflow=1.7 and gensim)
-- `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo *name-of-output-file.txt* -J *name-of-job* "python main.py"`
+- `$ pip install --user <package-to-install>` (in this case, install tensorflow=1.7 and gensim)
+- `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo <name-of-output-file.txt> -J <name-of-job> "python main.py"`

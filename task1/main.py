@@ -155,11 +155,11 @@ def main():
         perplexities = []  # array with perplexities for each sentence
 
         for i, batch in enumerate(batches):
-            x_batch, _ = zip(*batch)
-            x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, vocabulary_words_list)
+            _, y_batch = zip(*batch)
+            y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, vocabulary_words_list)
 
             feed_dict = {
-                lstm_network.input_x: x_batch,
+                lstm_network.input_x: y_batch,
                 lstm_network.init_state_hidden: np.zeros([test_batch_size, lstm_cell_state]),
                 lstm_network.init_state_current: np.zeros([test_batch_size, lstm_cell_state])
             }
@@ -167,7 +167,7 @@ def main():
             estimates = sess.run(lstm_network.softmax, feed_dict)
             estimates = np.reshape(estimates, [-1, sentence_len-1, vocabulary_size])
 
-            for j, sentence in enumerate(x_batch):
+            for j, sentence in enumerate(y_batch):
                 sentence_perplexity = eval.perplexity(sentence, estimates[j], vocabulary_words_list)
                 print("Sentence {} in batch {}: perplexity {}".format(test_batch_size * i + j, i,
                                                                       sentence_perplexity))

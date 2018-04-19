@@ -125,11 +125,11 @@ def test(dataset):
 
             print("Computing perplexities...")
             for i, batch in enumerate(batches):
-                x_batch, _ = zip(*batch)
-                x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, vocabulary_words_list)
+                _, y_batch = zip(*batch)
+                y_batch = train_utils.words_mapper_to_vocab_indices(y_batch, vocabulary_words_list)
 
                 feed_dict = {
-                    input_x: x_batch,
+                    input_x: y_batch,
                     init_state_hidden: np.zeros([FLAGS.test_batch_size, lstm_cell_state]),
                     init_state_current: np.zeros([FLAGS.test_batch_size, lstm_cell_state])
                 }
@@ -137,7 +137,7 @@ def test(dataset):
                 estimates = sess.run(prediction, feed_dict)
                 estimates = np.reshape(estimates, [-1, sentence_len - 1, vocabulary_size])
 
-                for j, sentence in enumerate(x_batch):
+                for j, sentence in enumerate(y_batch):
                     sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
                     print("Sentence {} in batch {}: perplexity {}".format(FLAGS.test_batch_size * i + j, i,
                                                                           sentence_perplexity))

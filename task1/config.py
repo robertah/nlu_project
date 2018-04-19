@@ -20,7 +20,7 @@ max_global_steps = 200000
 
 # run parameters
 model_to_load = True # TODO remove? -> do not remove it yet !
-lstm_is_training = False # change if u want to predict
+lstm_is_training = True # change if u want to predict
 shuffle_training = True # NEVER modify, even loclly now everything works
 
 # variables for the language model

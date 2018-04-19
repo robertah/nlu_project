@@ -358,9 +358,10 @@ def main():
 
                 """Zero state feeded initially for each sentence"""
                 for sentence in dataset:
-                    print ("SENTENCE IS ", sentence)
                     index=sentence.index(eos)
-                    sentence=sentence[0:index]
+                    sentence=sentence[1:index]
+                    print ("SENTENCE IS ", sentence)
+
                     nb_initial_words = len(sentence)
                     print("INITIAL SENTECE IS LONG ",nb_initial_words)
                     initial_lstm_state = (np.zeros((1, lstm_cell_state)),) * 2

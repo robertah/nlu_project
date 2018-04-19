@@ -20,9 +20,6 @@ def perplexity(sentence, estimate, vocabulary):
     # get <pad> index in vocabulary
     index_pad = vocabulary.index(pad)
 
-    print(sentence)
-    print(len(sentence))
-
     i = 0
     probs = []  # array with word probabilities
 

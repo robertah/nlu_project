@@ -85,7 +85,7 @@ def test(dataset):
 
     dataset, vocabulary_words_list = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len,
                                                                vocabulary_size, bos,
-                                                               eos, pad, unk).load_test_data(FLAGS.test_set,
+                                                               eos, pad, unk).load_eval_data(FLAGS.test_set,
                                                                                              vocabulary_pkl)
 
     out_dir = os.path.abspath(os.path.join(os.path.curdir, runs_dir))
@@ -95,6 +95,8 @@ def test(dataset):
     checkpoint_dir = os.path.abspath(os.path.join(latest_run, "checkpoints"))
 
     checkpoint_file = tf.train.latest_checkpoint(checkpoint_dir)
+
+    print(len(dataset))
 
     graph = tf.Graph()
     with graph.as_default():

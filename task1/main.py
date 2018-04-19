@@ -147,7 +147,7 @@ def main():
         """
         eval_dataset, vocabulary_words_list = data_utilities.data_utils(model_to_load, embeddings_size, sentence_len,
                                                                         vocabulary_size, bos,
-                                                                        eos, pad, unk).load_test_data(eval_set,
+                                                                        eos, pad, unk).load_eval_data(eval_set,
                                                                                                       vocabulary_pkl)
 
         batches = train_utils.batch_iter_train(data=eval_dataset, batch_size=test_batch_size, num_epochs=1,

@@ -100,7 +100,8 @@ class lstm_model():
                This next word is mapped to an index of the vocabulary"""
             # self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
             #                                          name='vocab_indices_predictions')
-            self.vocab_indices_predictions = tf.argmax(tf.nn.softmax(self.logits, name="vocab_indices_predictions"), axis=1)
+            self.softmax = tf.nn.softmax(self.logits, name="vocab_indices_predictions")
+            self.vocab_indices_predictions = tf.argmax(self.softmax, axis=1)
             # self.vocab_indices_predictions = indices_predictions
 
         # if not is_predicting:

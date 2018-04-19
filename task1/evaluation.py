@@ -10,8 +10,8 @@ def perplexity(sentence, estimate, vocabulary):
     """
     Compute the perplexity of a sentence given its estimate and the word dictionary
 
-    :param sentence: a sentence (in vector form) of test set (sentence_len)
-    :param estimate: the estimate of the sentence without bos (sentence_len, vocabulary_size)
+    :param sentence: a sentence (in vector form) of test set (sentence_len-1)
+    :param estimate: the estimate of the sentence without bos (sentence_len-1, vocabulary_size)
     :param vocabulary: the vocabulary containing 20k most frequent words
 
     :return: perplexity of the given sentence
@@ -20,13 +20,16 @@ def perplexity(sentence, estimate, vocabulary):
     # get <pad> index in vocabulary
     index_pad = vocabulary.index(pad)
 
-    i = 1  # we discard the bos token
+    print(sentence)
+    print(len(sentence))
+
+    i = 0
     probs = []  # array with word probabilities
 
     # iterate until we reach the end of the sentence or a pad token
-    while i < sentence_len and sentence[i] != index_pad:
+    while i < sentence_len - 1 and sentence[i] != index_pad:
         # take the probability related to the true word
-        groundtruth_prob = estimate[i][sentence[i+1]]
+        groundtruth_prob = estimate[i][sentence[i]]
         probs.append(groundtruth_prob)
         i += 1
     # compute the perplexity
@@ -35,23 +38,31 @@ def perplexity(sentence, estimate, vocabulary):
     return sentence_perplexity
 
 
-def write_perplexity(perplexities):
+def write_perplexity(perplexities, eval_step=False, current_step=None):
     """
     Write perplexities on file
 
     :param perplexities: perplexities of test sentences
+    :param eval_step: if it is evaluating
+    :param current_step: current training step, needed to output perplexity file during evaluation
     """
 
-    output_file = "group{}.perplexity{}".format(n_group, experiment)
+    if not eval_step:
+        output_file = "group{}.perplexity{}".format(n_group, experiment)
+    else:
+        output_file = "group{}.perplexity{}_eval-{}".format(n_group, experiment, current_step)
 
     with open(output_file, "w") as f:
-        for p in perplexities:
+        for p in perplexities[:-1]:
             f.write("{}\n".format(p))
+        f.write("{}".format(perplexities[-1]))
 
 
 def test(dataset):
     """
-    Test step: restore the trained model and compute the perplexities for the test data
+    Test step: restore the trained model and compute the perplexities for the test / evaluation data
+
+    :param dataset: path to test or evaluation dataset
     """
 
     print("Testing...")
@@ -60,7 +71,7 @@ def test(dataset):
     tf.flags.DEFINE_string("data_file_path", data_folder, "Path to the data folder.")
     tf.flags.DEFINE_string("test_set", dataset, "Path to the test data")
     # test parameters
-    tf.flags.DEFINE_integer("batch_size", test_batch_size, "Batch Size (default: 1)")
+    tf.flags.DEFINE_integer("test_batch_size", test_batch_size, "Batch Size (default: 1)")
     # tf.flags.DEFINE_string("checkpoint_dir", checkpoint_dir, "Checkpoint directory from training run")
     # Tensorflow parameters
     tf.flags.DEFINE_boolean("allow_soft_placement", True, "Allow device soft device placement")
@@ -79,9 +90,6 @@ def test(dataset):
                                                                vocabulary_size, bos,
                                                                eos, pad, unk).load_test_data(FLAGS.test_set,
                                                                                              vocabulary_pkl)
-    dataset_size = len(dataset)
-    print(dataset_size)
-    print(len(vocabulary_words_list))
 
     out_dir = os.path.abspath(os.path.join(os.path.curdir, runs_dir))
     all_runs = [os.path.join(out_dir, o) for o in os.listdir(out_dir)
@@ -111,29 +119,30 @@ def test(dataset):
             prediction = graph.get_operation_by_name("softmax_out_layer/vocab_indices_predictions").outputs[0]
 
             # Create batches for the test data, shuffle not needed
-            batches = train_utils.batch_iter(data=dataset, batch_size=FLAGS.batch_size, num_epochs=1, shuffle=False)
+            batches = train_utils.batch_iter_train(data=dataset, batch_size=FLAGS.test_batch_size, num_epochs=1,
+                                                   shuffle=False)
             perplexities = []  # array with perplexities for each sentence
 
-            print("Evaluating...")
+            print("Computing perplexities...")
             for i, batch in enumerate(batches):
                 x_batch, _ = zip(*batch)
                 x_batch = train_utils.words_mapper_to_vocab_indices(x_batch, vocabulary_words_list)
 
                 feed_dict = {
                     input_x: x_batch,
-                    init_state_hidden: np.zeros([FLAGS.batch_size, lstm_cell_state]),
-                    init_state_current: np.zeros([FLAGS.batch_size, lstm_cell_state])
+                    init_state_hidden: np.zeros([FLAGS.test_batch_size, lstm_cell_state]),
+                    init_state_current: np.zeros([FLAGS.test_batch_size, lstm_cell_state])
                 }
 
                 estimates = sess.run(prediction, feed_dict)
-                estimates = np.reshape(estimates, [-1, sentence_len, vocabulary_size])
+                estimates = np.reshape(estimates, [-1, sentence_len - 1, vocabulary_size])
 
                 for j, sentence in enumerate(x_batch):
                     sentence_perplexity = perplexity(sentence, estimates[j], vocabulary_words_list)
-                    print("Sentence {} in batch {}: perplexity {}".format(FLAGS.batch_size*i + j, i, sentence_perplexity))
+                    print("Sentence {} in batch {}: perplexity {}".format(FLAGS.test_batch_size * i + j, i,
+                                                                          sentence_perplexity))
                     perplexities.append(sentence_perplexity)
 
-    print("Check if perplexities and test set have the same size: ", len(perplexities) == dataset_size)
     write_perplexity(perplexities)
 
 

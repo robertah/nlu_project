@@ -54,9 +54,11 @@ def words_mapper_to_vocab_indices(x_batch, vocabulary_words_list):
     """Map words in x_batch to the corresponding vocabulary index
        returns x_batch with indices in place of the original words"""
 
+    #print(x_batch)
     nb_sentences = len(x_batch)
     nb_words = len(x_batch[0])
-
+    #print(nb_words)
+    print
     for idx_sentence in range(0, nb_sentences):
 
         for idx_word in range(0, nb_words):
@@ -73,7 +75,7 @@ def words_mapper_from_vocab_indices(indices_predictions, vocabulary_words_list, 
         indices_predictions = list(indices_predictions)
 
     nb_words_vocabulary_indices = len(indices_predictions)
-    print("NB words ", nb_words_vocabulary_indices)
+    #print("NB words ", nb_words_vocabulary_indices)
     # print(list(indices_predictions))
     # nb_words_vocabulary_indices = len(indices_predictions[0])
 
@@ -97,20 +99,62 @@ def batch_iter(data, batch_size, num_epochs, shuffle=False, testing=False):
     data_size = len(data)
     num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
 
+    word_in_sentence=len(data[0])
+
     for epoch in range(num_epochs):
 
         # Shuffle the data at each epoch
         if shuffle:
             random.shuffle(data)
             shuffled_data = data
-            print("RANDOM SHUFFLED ",shuffled_data[0])
         else:
             shuffled_data = data
 
         for batch_num in range(num_batches_per_epoch):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
-            # print(shuffled_data[start_index:end_index])
             if end_index-start_index == batch_size:
+
                 yield zip(shuffled_data[start_index:end_index], np.copy(shuffled_data[start_index:end_index]))
-                # batches.append(shuffled_data[start_index:end_index])
+                
+
+# This is used for the training only, because we want to input x and y batches correctly for precitions
+def batch_iter_train(data, batch_size, num_epochs, shuffle=False, testing=False):
+    """
+    Generates a batch generator for a dataset.
+    shuffle should stay false because on local pc we get memory error and the PC gets stucked
+    """
+
+    batches = []
+    data_size = len(data)
+    num_batches_per_epoch = int((len(data) - 1) / batch_size) + 1
+
+    words_in_sentence=len(data[0])
+
+    for epoch in range(num_epochs):
+
+        # Shuffle the data at each epoch
+        if shuffle:
+            random.shuffle(data)
+            shuffled_data = data
+        else:
+            shuffled_data = data
+
+        for batch_num in range(num_batches_per_epoch):
+            start_index = batch_num * batch_size
+            end_index = min((batch_num + 1) * batch_size, data_size)
+
+            if end_index-start_index == batch_size:
+
+                x_batch = shuffled_data[start_index:end_index]
+                y_batch = x_batch[:]
+
+                for sentence_idx in range (batch_size):
+                    x_batch[sentence_idx] = x_batch[sentence_idx][0:words_in_sentence-1]
+
+
+                    y_batch[sentence_idx] = y_batch[sentence_idx][1:words_in_sentence]
+                
+
+                yield zip(x_batch, y_batch)
+

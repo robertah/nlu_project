@@ -107,10 +107,10 @@ def main():
             #print(vocab_idx_predictions)
             #print("Example of sentence predicted by the network by training")
             #print(train_utils.words_mapper_from_vocab_indices(vocab_idx_predictions, utils.vocabulary_words_list,
-            #                                                  is_tuple=True)[0:29])
+            #                                                 is_tuple=True)[0:28])
             #print("Groundtruth for the sentence predicted by the network above")
-            #print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch, [batch_size * 30]),
-            #                                                  utils.vocabulary_words_list)[0:29])
+            #print(train_utils.words_mapper_from_vocab_indices(np.reshape(x_batch, [batch_size * 29]),
+            #                                                  utils.vocabulary_words_list)[0:28])
 
             lstm_network.next_hidden_state = new_hidden_state
             lstm_network.next_current_state = new_current_state
@@ -190,7 +190,7 @@ def main():
                 lstm_network = model_lstm.lstm_model(
                     vocab_size=FLAGS.vocabulary_size,
                     embedding_size=FLAGS.embeddings_size,
-                    words_in_sentence=sentence_len,
+                    words_in_sentence=sentence_len-1,
                     lstm_cell_size=lstm_cell_state,
                     lstm_cell_size_down=lstm_cell_state_down,
                     down_project=down_project
@@ -246,7 +246,7 @@ def main():
         """batches is a generator, please refer to training_utilities for more information.
            batch_iter function is executed if an iteration is performed on op of it and it
            gives a new batch each time (sequentially-wise w.r.t the original dataset)"""
-        batches = train_utils.batch_iter(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=shuffle_training,
+        batches = train_utils.batch_iter_train(data=dataset, batch_size=batch_size, num_epochs=num_epochs, shuffle=shuffle_training,
                                          testing=False)
 
         for batch in batches:
@@ -299,7 +299,7 @@ def main():
 
         checkpoint_prefix = tf.train.latest_checkpoint(checkpoint_dir)
 
-        #checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints"))
+        #checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1524135257/checkpoints/"))
 
         # Mel's
         # out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
@@ -358,9 +358,11 @@ def main():
 
                 """Zero state feeded initially for each sentence"""
                 for sentence in dataset:
-
+                    print ("SENTENCE IS ", sentence)
+                    index=sentence.index(eos)
+                    sentence=sentence[0:index]
                     nb_initial_words = len(sentence)
-
+                    print("INITIAL SENTECE IS LONG ",nb_initial_words)
                     initial_lstm_state = (np.zeros((1, lstm_cell_state)),) * 2
 
                     lstm_state = initial_lstm_state
@@ -368,22 +370,28 @@ def main():
 
                     for word in sentence:
 
+                        if word == eos:
+                            print("FOUND", word)
+                            break
                         word = np.array(utils.vocabulary_words_list.index(word)).reshape(1, 1)
                         word_predicted, lstm_state = predicting_step(word, lstm_state)
                         # print("Word predicted is ",word_predicted[0][0])
                         mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
                         # print("NOT predicting from lstm prediction ",mapped_word)
+
                         full_sentence.append(mapped_word)
                         print(mapped_word)
 
                         if mapped_word == eos:
                             break
-
+                    print("Sentence before continuation is ", full_sentence)     
                     """Futher predictions done through the last predicted word of lstm and the current lstm state"""
                     words_remaining = max_predicted_words - nb_initial_words
+                    print("max_predicted_words ",max_predicted_words)
+                    print("nb_initial_words ",nb_initial_words)
                     states = []
                     if full_sentence[-1] != eos:
-
+                        print("Words remaining ",words_remaining)
                         for i in range(words_remaining):
 
                             last_word_predicted = full_sentence[-1]
@@ -404,7 +412,8 @@ def main():
                             # print("Predicting from lstm prediction ",mapped_word, " word ", i)
                             if mapped_word == eos:
                                 break
-
+                        print("SENTENCE WAS LONG ",len(full_sentence))
+                        print("FULL PREDICTION ",full_sentence)
                     sentence_nb = sentence_nb + 1
                     complete_sentences.append(full_sentence)
                     print("Completed sentence number ", sentence_nb)

@@ -34,7 +34,6 @@ Eager execution tensorflow to enable the recurrent computaton in the lstm"""
 def main():
     """load configs & data -> preprocessing"""
 
-    # training_with_w2v, lstm_cell_state, down_project = experiment_params(task, experiment)
 
     max_predicted_words = 20
 
@@ -42,10 +41,7 @@ def main():
         -> the advantage : Variables can be accessed from a tensorflow object without 
         explicitely passing them"""
 
-    """TODO: make order with all this , decide if to delete or to keep"""
 
-    # tf.flags.DEFINE_float("dev_sample_percentage", .1,
-    #                       "Percentage of the training data used for validation (default: 10%)")
     tf.flags.DEFINE_string("train_set", train_set, "Path to the training data")
     # Model parameters
     tf.flags.DEFINE_integer("embeddings_size", embeddings_size, "Dimensionality of word embeddings (default: 50)")
@@ -309,34 +305,17 @@ def main():
 
         checkpoint_prefix = tf.train.latest_checkpoint(checkpoint_dir)
 
-        # checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, runs_dir+"/1524135257/checkpoints/"))
 
-        # Mel's
-        # out_dir = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number)))
-        # checkpoint_dir = os.path.abspath(os.path.join(out_dir, "checkpoints"))
-        # meta_path = tf.train.latest_checkpoint(checkpoint_dir) + '.meta'
-        # checkpoint_prefix = os.path.abspath(os.path.join(os.path.curdir, "runs", str(training_file_number),
-        #                                                  "checkpoints"))
+
 
         with tf.Session() as sess:
 
-            # Mel's
-            # saver = tf.train.import_meta_graph(meta_path)
-            # saver.restore(sess, tf.train.latest_checkpoint(checkpoint_dir))
 
             sess.run(tf.global_variables_initializer())
             saver = tf.train.Saver(max_to_keep=5)
-            # saver = tf.train.import_meta_graph("{}.meta".format(checkpoint_prefix))
             saver.restore(sess, checkpoint_prefix)
 
-            # saver = tf.train.import_meta_graph(checkpoint_prefix+'/model-1600.meta')
-            # saver.restore(sess,
-            #              tf.train.latest_checkpoint(os.path.join(os.path.curdir, runs_dir+"/1523480613/checkpoints")))
 
-            # Mel's
-            # saver.restore(sess,
-            #               tf.train.latest_checkpoint(os.path.join(os.path.curdir, "runs", str(training_file_number),
-            #                                                       "checkpoints")))
 
             input_x = tf.get_default_graph().get_tensor_by_name("input_x:0")
 
@@ -356,7 +335,7 @@ def main():
                                               eos, pad, unk)
 
             dataset, _ = utils.load_test_data(path_to_file=cont_set, vocabulary_file_path=vocabulary_pkl)
-            dataset = dataset[0:100]
+            #dataset = dataset[0:100]
             print(len(dataset))
             # dataset=dataset[0:50]  uncomment for testing and have results in the brief time
             dataset_size = len(dataset)
@@ -385,16 +364,16 @@ def main():
                         break
                     word = np.array(utils.vocabulary_words_list.index(word)).reshape(1, 1)
                     word_predicted, lstm_state = predicting_step(word, lstm_state)
-                    # print("Word predicted is ",word_predicted[0][0])
-                    mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
-                    # print("NOT predicting from lstm prediction ",mapped_word)
 
-                    full_sentence.append(mapped_word)
+                    mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
+
+                    full_sentence.append(utils.vocabulary_words_list[word[0][0]])
                     print(mapped_word)
 
                     if mapped_word == eos:
                         break
                 print("Sentence before continuation is ", full_sentence)
+                
                 """Futher predictions done through the last predicted word of lstm and the current lstm state"""
                 words_remaining = max_predicted_words - nb_initial_words
                 print("max_predicted_words ", max_predicted_words)
@@ -410,17 +389,11 @@ def main():
                             1, 1)
 
                         word_predicted, lstm_new_state = predicting_step(last_word_predicted, lstm_state)
-                        # TODO: check the state of the lstm changes over time (memory) -> not sure .> test with exhaustively trained model
-                        # if(lstm_new_state==lstm_state):
-                        #    print("something wrong")
-                        # states.append(lstm_new_state)
-                        # state_0=state[0]
-                        # for stat
 
                         lstm_state = lstm_new_state
                         mapped_word = utils.vocabulary_words_list[word_predicted[0][0]]
                         full_sentence.append(mapped_word)
-                        # print("Predicting from lstm prediction ",mapped_word, " word ", i)
+
                         if mapped_word == eos:
                             break
                     print("SENTENCE WAS LONG ", len(full_sentence))

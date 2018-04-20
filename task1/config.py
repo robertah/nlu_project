@@ -8,7 +8,7 @@ n_group = '20'
 
 ############### SET TASK AND EXPERIMENT HERE ###############
 task = 1  # 1 or 2
-experiment = 'A'  # 'A' or 'B' or 'C'
+experiment = 'B'  # 'A' or 'B' or 'C'
 ############################################################
 
 # take the model trained in C for task 2
@@ -41,7 +41,7 @@ lstm_cell_state = lstm_cell_state_down if task == 1 and experiment != 'C' else 2
 down_project = False if task == 1 and experiment != 'C' else True
 
 # path to data folder and data sets
-data_folder = './data'
+data_folder = '../data'
 train_set = data_folder + '/sentences.train'
 eval_set = data_folder + '/sentences.eval'
 cont_set = data_folder + '/sentences.continuation'

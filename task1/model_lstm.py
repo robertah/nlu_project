@@ -20,8 +20,6 @@ class lstm_model():
         """Tensor for predictions"""
         self.vocab_indices_predictions = tf.placeholder(tf.float32, [None],
                                                         name='vocab_indices_predictions')
-        # is_predicting = tf.placeholder(tf.bool, shape=(), name="is_predicting")
-        # nb_words_per_sentence = tf.placeholder(tf.float32, [batch_size], name="nb_words_per_sentence")
 
         lstm_initial_state = (self.init_state_hidden, self.init_state_current)
 
@@ -47,19 +45,6 @@ class lstm_model():
             for column_words in range(words_in_sentence):
                 if column_words > 0:
                     tf.get_variable_scope().reuse_variables()
-                    
-                """At run time, if the network is predicting and some sentence is in principle finished,
-                   we use the last word predicted by the network in the previous step. Please note that we predict up to the 30th word"""
-
-                # if is_predicting is not None:
-                #    words = embedded_input[:, column_words, :]
-                #    for i in range(words_in_sentence):
-                #        """nb_words_per_sentence is an array which stores the length of each sentence in the matrix"""
-                #        if nb_words_per_sentence[i] < column_words:
-                #            words[i]=predictions[i]
-                #else:
-                #    words = embedded_input[:, column_words, :]
-
                 """Slicing the matrix for the i-th word of each sentence in the entire batch. The computation happens
                        in parallel for all sentences in batch, since anyway weights update is done after the all
                        batch goes through the network. This allows the training by batch"""
@@ -98,8 +83,7 @@ class lstm_model():
             """We need to get probabilities out of logits.
                We need to keep just the highest probable next word for each word in the batch
                This next word is mapped to an index of the vocabulary"""
-            # self.vocab_indices_predictions = tf.placeholder(tf.float32, [batch_size * words_in_sentence],
-            #                                          name='vocab_indices_predictions')
+
             self.softmax = tf.nn.softmax(self.logits, name="vocab_indices_predictions")
             self.vocab_indices_predictions = tf.argmax(self.softmax, axis=1)
             # self.vocab_indices_predictions = indices_predictions

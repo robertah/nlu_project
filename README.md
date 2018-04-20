@@ -45,8 +45,8 @@ From local terminal:
 From cluster:
 - `$ cd <path-to-directory>` (for example, $cd /cluster/home/*username*/project_nlu/task1)
 - `$ module load python_gpu/3.6.4` (check https://scicomp.ethz.ch/wiki/Leonhard_beta_testing to see which version to load)
-- `$ virtualenv venv` (to create an virtual environment)
-- `$ source venv/bin/activate` (to activate the virtual environment)
+- `$ virtualenv venv` (create an virtual environment)
+- `$ source venv/bin/activate` (activate the virtual environment)
 - `$ pip3 install --user -r requirements.txt` (in this case, install tensorflow=1.7 and gensim)
 - `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo <name-of-output-file.txt> -J <name-of-job> "python main.py"`
 

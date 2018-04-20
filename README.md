@@ -41,7 +41,7 @@ Run main.py
 
 
 ### Note
-- To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`, `sentences.eval`) in a `./data` folder at the same level as the task1 folder
+- To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`, `sentences.eval`) in a `../data` folder at the same level as the task1 folder
 
 - To visualize graph in Tensorboard, type in terminal:<br />
 `$ tensorboard --logdir=/<path-to-project>/tas/runs/<run-IDnumber>/summaries/train`<br />

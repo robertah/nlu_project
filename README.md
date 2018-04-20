@@ -15,7 +15,7 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 ### Files
 - **main.py**
 - **model_lstm.py** - Defines the recurrent neural network with LSTM cells
-(forward and backward propagation, loss and accuracy calculation))
+(forward and backward propagation, loss and accuracy calculation)
 - **config.py** - Contains the configuration variables used in the project
 - **data_utilities.py** - Used for data preprocessing (tokenizing first 30 words of sentence, adding special tokens
  (`<bos>`, `<eos>`, `<unk>`, `<pad>`),...)
@@ -25,11 +25,23 @@ Part 2: Predict the next word given the previous hidden state and the previous w
 - **evaluation.py** - Used for computation of sentence perplexity: outputs a file of the form "group20.perplexityX" (X refering to the experiment A, B or C)
 
 ### Running Experiment
-For training,
+**For Training LSTM** <br />
+Modify config.py: input parameters task=1 and experiment=A, B or C
+(and eval_perpl_file=True if perplexity files for evaluation set needed) <br />
+Run main.py
+
+**For Computing Perplexity** <br />
+Modify config.py: input 'task' and 'experiment' parameters <br />
+Run evaluation.py
+
+**For Predicting Rest of Sentence** <br />
+Modify config.py: input parameter task=2 and experiment=C (in our case) <br />
+Run main.py
+
 
 
 ### Note
-- To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`) in a `./data` folder at the same level as the task1 folder
+- To run the code, one must have the data files (`sentences.train`, `sentences.test`, `sentences.continuation`, `sentences.eval`) in a `./data` folder at the same level as the task1 folder
 
 - To visualize graph in Tensorboard, type in terminal:<br />
 `$ tensorboard --logdir=/<path-to-project>/tas/runs/<run-IDnumber>/summaries/train`<br />

@@ -65,7 +65,7 @@ From cluster:
 - `$ pip3 install --user -r requirements.txt` (in this case, install tensorflow=1.7 and gensim)
 - `$ bsub -n 4 -R "rusage[mem=20000, ngpus_excl_p=1]" -oo <name-of-output-file.txt> -J <name-of-job> "python main.py"`
 
-**To run on Google-colab
+**To run on Google-colab** <br/>
 - First thing to do is : Runtime -> Change runtime type -> GPU 
 - Ask to make the repository public for few time to the current owner of the repository
 - While the repository is set to public, digit on a python cell of colab : !git clone https://github.com/robertah/nlu_project.git
